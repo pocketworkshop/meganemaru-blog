@@ -8,6 +8,12 @@ const SCHEDULE_CATEGORIES = [
   "その他",
 ];
 
+const SKE48_YOUTUBE_HANDLE = "https://www.youtube.com/@SKE48_official";
+const GOOGLE_NEWS_RSS =
+  "https://news.google.com/rss/search?q=" +
+  encodeURIComponent("SKE48 when:2d") +
+  "&hl=ja&gl=JP&ceid=JP:ja";
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -103,7 +109,7 @@ async function getYesterdayDigest(request, ctx) {
   const origin = new URL(request.url).origin;
 
   const cacheKey = new Request(
-    `${origin}/api/ske48/yesterday?date=${encodeURIComponent(dateKey)}&digest=1`,
+    `${origin}/api/ske48/yesterday?date=${encodeURIComponent(dateKey)}&digest=2`,
     { method: "GET" }
   );
 
@@ -112,18 +118,27 @@ async function getYesterdayDigest(request, ctx) {
   if (cached) return cached;
 
   try {
-    const [scheduleResult, newsResult, blogResult] = await Promise.all([
-      fetchSchedule(target),
-      fetchOfficialNews(dottedDate),
-      fetchMemberBlogs(dottedDate),
-    ]);
+    const [scheduleResult, newsResult, blogResult, externalNewsResult, youtubeResult] =
+      await Promise.all([
+        safeSource(() => fetchSchedule(target), "https://ske48.co.jp/schedule/list/"),
+        safeSource(() => fetchOfficialNews(dottedDate), "https://ske48.co.jp/news/29/"),
+        safeSource(() => fetchMemberBlogs(dottedDate), "https://ske48.co.jp/blog/list/3/0/"),
+        safeSource(() => fetchExternalNews(target), GOOGLE_NEWS_RSS),
+        safeSource(() => fetchYoutube(target), SKE48_YOUTUBE_HANDLE),
+      ]);
 
     const scheduleItems = scheduleResult.ok ? scheduleResult.items : [];
     const newsItems = newsResult.ok ? newsResult.items : [];
     const blogItems = blogResult.ok ? blogResult.items : [];
+    const externalNewsItems = externalNewsResult.ok ? externalNewsResult.items : [];
+    const youtubeItems = youtubeResult.ok ? youtubeResult.items : [];
 
     const total =
-      scheduleItems.length + newsItems.length + blogItems.length;
+      scheduleItems.length +
+      newsItems.length +
+      blogItems.length +
+      externalNewsItems.length +
+      youtubeItems.length;
 
     const payload = {
       ok: true,
@@ -135,17 +150,36 @@ async function getYesterdayDigest(request, ctx) {
       scheduleItems,
       newsItems,
       blogItems,
+      externalNewsItems,
+      youtubeItems,
       counts: {
         schedule: scheduleItems.length,
         news: newsItems.length,
         blogs: blogItems.length,
+        externalNews: externalNewsItems.length,
+        youtube: youtubeItems.length,
         total,
       },
-      summary: buildDigestSummary(scheduleItems, newsItems, blogItems),
+      summary: buildDigestSummary(
+        scheduleItems,
+        newsItems,
+        blogItems,
+        externalNewsItems,
+        youtubeItems
+      ),
       sources: {
         schedule: scheduleResult.sourceUrl,
         news: newsResult.sourceUrl,
         blogs: blogResult.sourceUrl,
+        externalNews: externalNewsResult.sourceUrl,
+        youtube: youtubeResult.sourceUrl,
+      },
+      sourceStatus: {
+        schedule: scheduleResult.ok,
+        news: newsResult.ok,
+        blogs: blogResult.ok,
+        externalNews: externalNewsResult.ok,
+        youtube: youtubeResult.ok,
       },
       fetchedAt: new Date().toISOString(),
     };
@@ -167,6 +201,26 @@ async function getYesterdayDigest(request, ctx) {
       },
       502
     );
+  }
+}
+
+async function safeSource(loader, fallbackUrl) {
+  try {
+    const result = await loader();
+    return {
+      ok: Boolean(result?.ok),
+      items: Array.isArray(result?.items) ? result.items : [],
+      sourceUrl: result?.sourceUrl || fallbackUrl,
+      debug: result?.debug,
+    };
+  } catch (error) {
+    console.error("SKE48 source fetch failed:", fallbackUrl, error);
+    return {
+      ok: false,
+      items: [],
+      sourceUrl: fallbackUrl,
+      debug: { message: String(error?.message || error) },
+    };
   }
 }
 
@@ -285,24 +339,180 @@ async function fetchMemberBlogs(dottedDate) {
   };
 }
 
-function buildDigestSummary(scheduleItems, newsItems, blogItems) {
+async function fetchExternalNews(target) {
+  const sourceUrl = GOOGLE_NEWS_RSS;
+  const response = await fetch(sourceUrl, {
+    headers: {
+      Accept: "application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
+      "Accept-Language": "ja-JP,ja;q=0.9",
+      "User-Agent":
+        "Mozilla/5.0 (compatible; MeganemaruBlog/1.0; +https://meganemaru-blog.pwtools.workers.dev/)",
+    },
+  });
+
+  if (!response.ok) {
+    return { ok: false, items: [], sourceUrl };
+  }
+
+  const xml = await response.text();
+  const targetDate = formatDateKey(target);
+  const items = [];
+
+  for (const itemXml of matchBlocks(xml, "item")) {
+    const title = cleanXmlText(getTagText(itemXml, "title"));
+    const link = cleanXmlText(getTagText(itemXml, "link"));
+    const pubDate = cleanXmlText(getTagText(itemXml, "pubDate"));
+    const source = cleanXmlText(getTagText(itemXml, "source")) || "外部メディア";
+
+    if (!title || !link || !pubDate) continue;
+    if (dateKeyInJst(pubDate) !== targetDate) continue;
+    if (/ske48\.co\.jp/i.test(itemXml)) continue;
+
+    items.push({
+      source,
+      title: stripNewsSourceSuffix(title, source),
+      url: link,
+      publishedAt: pubDate,
+    });
+  }
+
+  return {
+    ok: true,
+    items: dedupeBy(items, (item) => normalizeTitle(item.title)).slice(0, 12),
+    sourceUrl,
+  };
+}
+
+async function fetchYoutube(target) {
+  const sourceUrl = SKE48_YOUTUBE_HANDLE;
+  const channelId = await resolveYoutubeChannelId();
+
+  if (!channelId) {
+    return {
+      ok: false,
+      items: [],
+      sourceUrl,
+      debug: { message: "YouTube channel ID could not be resolved." },
+    };
+  }
+
+  const feedUrl =
+    `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(channelId)}`;
+
+  const response = await fetch(feedUrl, {
+    headers: {
+      Accept: "application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
+      "Accept-Language": "ja-JP,ja;q=0.9",
+      "User-Agent":
+        "Mozilla/5.0 (compatible; MeganemaruBlog/1.0; +https://meganemaru-blog.pwtools.workers.dev/)",
+    },
+  });
+
+  if (!response.ok) {
+    return {
+      ok: false,
+      items: [],
+      sourceUrl,
+      debug: { httpStatus: response.status, channelId },
+    };
+  }
+
+  const xml = await response.text();
+  const targetDate = formatDateKey(target);
+  const items = [];
+
+  for (const entryXml of matchBlocks(xml, "entry")) {
+    const title = cleanXmlText(getTagText(entryXml, "title"));
+    const published = cleanXmlText(getTagText(entryXml, "published"));
+    const videoId = cleanXmlText(getTagText(entryXml, "yt:videoId"));
+    const linkMatch = entryXml.match(
+      /<link\b[^>]*rel=["']alternate["'][^>]*href=["']([^"']+)["'][^>]*\/?>/i
+    );
+
+    const url =
+      linkMatch?.[1] ||
+      (videoId ? `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}` : "");
+
+    if (!title || !published || !url) continue;
+    if (dateKeyInJst(published) !== targetDate) continue;
+
+    items.push({
+      title,
+      url: decodeEntities(url),
+      publishedAt: published,
+    });
+  }
+
+  return {
+    ok: true,
+    items: dedupeBy(items, (item) => item.url).slice(0, 12),
+    sourceUrl,
+    debug: { channelId },
+  };
+}
+
+async function resolveYoutubeChannelId() {
+  const candidates = [
+    "https://www.youtube.com/@SKE48_official",
+    "https://www.youtube.com/user/SKE48",
+  ];
+
+  for (const url of candidates) {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Linux; Android 16) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+          "Accept-Language": "ja-JP,ja;q=0.9,en;q=0.8",
+        },
+      });
+
+      if (!response.ok) continue;
+
+      const html = await response.text();
+      const patterns = [
+        /"channelId":"(UC[^"]+)"/,
+        /"externalId":"(UC[^"]+)"/,
+        /itemprop=["']channelId["'][^>]*content=["'](UC[^"']+)["']/i,
+        /\/channel\/(UC[A-Za-z0-9_-]+)/,
+      ];
+
+      for (const pattern of patterns) {
+        const match = html.match(pattern);
+        if (match?.[1]) return match[1];
+      }
+    } catch {
+      // Try the next URL.
+    }
+  }
+
+  return "";
+}
+
+function buildDigestSummary(
+  scheduleItems,
+  newsItems,
+  blogItems,
+  externalNewsItems,
+  youtubeItems
+) {
   const total =
-    scheduleItems.length + newsItems.length + blogItems.length;
+    scheduleItems.length +
+    newsItems.length +
+    blogItems.length +
+    externalNewsItems.length +
+    youtubeItems.length;
 
   if (!total) {
     return "確認できた範囲では、大きな動きは少なめでした。";
   }
 
   const parts = [];
-  if (scheduleItems.length) {
-    parts.push(`公式スケジュール${scheduleItems.length}件`);
-  }
-  if (newsItems.length) {
-    parts.push(`公式ニュース${newsItems.length}件`);
-  }
-  if (blogItems.length) {
-    parts.push(`メンバーブログ${blogItems.length}件`);
-  }
+  if (scheduleItems.length) parts.push(`公式スケジュール${scheduleItems.length}件`);
+  if (newsItems.length) parts.push(`公式ニュース${newsItems.length}件`);
+  if (blogItems.length) parts.push(`メンバーブログ${blogItems.length}件`);
+  if (externalNewsItems.length) parts.push(`外部ニュース${externalNewsItems.length}件`);
+  if (youtubeItems.length) parts.push(`YouTube${youtubeItems.length}件`);
 
   let text = `${parts.join("、")}を確認しました。`;
 
@@ -313,8 +523,14 @@ function buildDigestSummary(scheduleItems, newsItems, blogItems) {
     text += ` スケジュールでは「${scheduleItems[0].title}」などがありました。`;
   }
 
-  if (newsItems[0]) {
+  if (externalNewsItems[0]) {
+    text += ` 外部メディアでは「${externalNewsItems[0].title}」などが報じられています。`;
+  } else if (newsItems[0]) {
     text += ` 公式ニュースでは「${newsItems[0].title}」が掲載されています。`;
+  }
+
+  if (youtubeItems[0]) {
+    text += ` 公式YouTubeでは「${youtubeItems[0].title}」が公開されました。`;
   }
 
   if (blogItems[0]) {
@@ -383,6 +599,62 @@ function parseAnchors(html, baseUrl) {
   }
 
   return anchors;
+}
+
+function matchBlocks(xml, tagName) {
+  const escaped = escapeRegex(tagName);
+  return String(xml).match(new RegExp(`<${escaped}\\b[\\s\\S]*?<\\/${escaped}>`, "gi")) || [];
+}
+
+function getTagText(xml, tagName) {
+  const escaped = escapeRegex(tagName);
+  const match = String(xml).match(
+    new RegExp(`<${escaped}\\b[^>]*>([\\s\\S]*?)<\\/${escaped}>`, "i")
+  );
+  return match?.[1] || "";
+}
+
+function cleanXmlText(value) {
+  return normalizeSpace(
+    decodeEntities(
+      String(value)
+        .replace(/^<!\[CDATA\[([\s\S]*?)\]\]>$/i, "$1")
+        .replace(/<[^>]+>/g, " ")
+    )
+  );
+}
+
+function stripNewsSourceSuffix(title, source) {
+  const normalizedTitle = normalizeSpace(title);
+  const normalizedSource = normalizeSpace(source);
+  if (!normalizedSource) return normalizedTitle;
+
+  const suffix = ` - ${normalizedSource}`;
+  return normalizedTitle.endsWith(suffix)
+    ? normalizedTitle.slice(0, -suffix.length).trim()
+    : normalizedTitle;
+}
+
+function normalizeTitle(value) {
+  return normalizeSpace(value)
+    .toLowerCase()
+    .replace(/[「」『』【】（）()[\]<>〈〉《》"'’“”!?！？・:：,，.。]/g, "")
+    .replace(/\s+/g, "");
+}
+
+function dateKeyInJst(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+
+  const map = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${map.year}-${map.month}-${map.day}`;
 }
 
 async function fetchOfficial(url) {
