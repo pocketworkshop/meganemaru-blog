@@ -1,0 +1,73 @@
+media:
+  - name: blog_images
+    label: 記事画像
+    input: public/uploads
+    output: /uploads
+    categories: [image]
+    extensions: [jpg, jpeg, png, webp, gif]
+    rename: true
+
+content:
+  - name: posts
+    label: ブログ記事
+    type: file
+    path: public/data/posts.json
+    format: json
+    list: true
+    fields:
+      - name: slug
+        label: false
+        type: string
+        hidden: true
+      - name: id
+        label: false
+        type: uuid
+        hidden: true
+        options:
+          editable: false
+      - name: title
+        label: タイトル
+        type: string
+        required: true
+      - name: category
+        label: カテゴリー
+        type: select
+        required: true
+        options:
+          values: [SKE48, 競馬, ゲーム, 便利ツール, 雑記]
+      - name: date
+        label: 公開日
+        type: date
+        required: true
+        options:
+          format: yyyy-MM-dd
+      - name: summary
+        label: 記事の説明
+        type: text
+        required: true
+        options:
+          maxlength: 240
+      - name: theme
+        label: false
+        type: string
+        hidden: true
+      - name: bodyHtml
+        label: 本文
+        type: rich-text
+        required: true
+        options:
+          format: html
+          media: blog_images
+          path: blog
+          rename: true
+          switcher: true
+
+settings:
+  content:
+    merge: true
+  commit:
+    identity: app
+    templates:
+      create: "記事を追加"
+      update: "記事を更新"
+      delete: "記事を削除"
