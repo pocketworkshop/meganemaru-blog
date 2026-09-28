@@ -5,6 +5,7 @@
 
   const grid = document.getElementById('skePosts');
   const todayBox = document.querySelector('#today .ske-hub-placeholder');
+  const yesterdayBox = document.querySelector('#yesterday .ske-hub-placeholder');
 
   const escapeHtml = (value) => String(value || '')
     .replaceAll('&','&amp;')
@@ -26,14 +27,16 @@
     'その他': 'other'
   })[category] || 'other';
 
+  const loadingHtml = (text) => `
+    <div class="ske-schedule-loading">
+      <span class="ske-schedule-spinner" aria-hidden="true"></span>
+      <strong>${escapeHtml(text)}</strong>
+    </div>`;
+
   async function loadTodaySchedule() {
     if (!todayBox) return;
 
-    todayBox.innerHTML = `
-      <div class="ske-schedule-loading">
-        <span class="ske-schedule-spinner" aria-hidden="true"></span>
-        <strong>公式スケジュールを確認中...</strong>
-      </div>`;
+    todayBox.innerHTML = loadingHtml('公式スケジュールを確認中...');
 
     try {
       const response = await fetch('/api/ske48/today', { cache: 'no-store' });
@@ -82,6 +85,40 @@
     }
   }
 
+  async function loadYesterdayDigest() {
+    if (!yesterdayBox) return;
+
+    yesterdayBox.innerHTML = loadingHtml('昨日の動きをまとめています...');
+
+    try {
+      const response = await fetch('/api/ske48/yesterday', { cache: 'no-store' });
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || 'yesterday digest failed');
+      }
+
+      const heading = `${data.month}月${data.day}日（${escapeHtml(data.weekday)}）`;
+
+      yesterdayBox.innerHTML = `
+        <div class="ske-yesterday-date">${heading}</div>
+        <strong>${escapeHtml(data.summary)}</strong>
+        <div class="ske-yesterday-stats">
+          <span><b>${data.counts.schedule}</b> 予定</span>
+          <span><b>${data.counts.news}</b> 公式ニュース</span>
+          <span><b>${data.counts.blogs}</b> メンバーブログ</span>
+        </div>
+        <a class="ske-yesterday-button" href="/ske48/yesterday.html">
+          昨日のまとめを詳しく見る <span>›</span>
+        </a>`;
+    } catch (error) {
+      console.error(error);
+      yesterdayBox.innerHTML = `
+        <strong>昨日のまとめを取得できませんでした。</strong>
+        <p>公式サイトの取得状況を確認して、時間を置いてもう一度お試しください。</p>`;
+    }
+  }
+
   async function loadSkePosts() {
     if (!grid) return;
 
@@ -116,5 +153,6 @@
   }
 
   loadTodaySchedule();
+  loadYesterdayDigest();
   loadSkePosts();
 })();

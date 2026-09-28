@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#6f9dff" />
+  <meta name="description" content="前日のSKE48公式スケジュール、公式ニュース、メンバーブログを自動でまとめた日報です。" />
+  <title>昨日のSKE48 | めがねまるのブログ</title>
+  <link rel="icon" href="/assets/bear-logo.png" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/ske48/ske48.css" />
+</head>
+<body class="ske-page">
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="ホーム">
+      <img class="brand-logo" src="/assets/bear-logo.png" alt="" aria-hidden="true" />
+      <span>
+        <strong class="js-site-name">めがねまるのブログ</strong>
+        <small class="js-tagline">好きなことで、毎日をちょっと楽しく。</small>
+      </span>
+    </a>
+    <button class="menu-button" id="menuButton" aria-label="メニューを開く" aria-expanded="false">☰</button>
+    <nav class="main-nav" id="mainNav" aria-label="メインメニュー">
+      <a href="/">⌂ ホーム</a>
+      <a href="/blog/">▤ 最新記事</a>
+      <a class="active" href="/ske48/">S SKE48</a>
+      <a href="/#tools">🔧 便利ツール</a>
+    </nav>
+  </header>
+
+  <main class="ske-digest-page shell">
+    <a class="ske-digest-back" href="/ske48/">‹ SKE48ページへ戻る</a>
+
+    <section class="ske-digest-hero">
+      <span class="section-kicker">YESTERDAY'S SKE48</span>
+      <h1>昨日のSKE48</h1>
+      <p id="digestDate">前日の公式情報を読み込み中...</p>
+    </section>
+
+    <section class="ske-digest-summary" id="digestSummary">
+      <div class="ske-schedule-loading">
+        <span class="ske-schedule-spinner" aria-hidden="true"></span>
+        <strong>昨日の動きをまとめています...</strong>
+      </div>
+    </section>
+
+    <section class="ske-digest-section">
+      <div class="ske-digest-heading">
+        <span class="ske-digest-icon">▦</span>
+        <div><small>SCHEDULE</small><h2>公演・イベント・メディア</h2></div>
+      </div>
+      <div class="ske-digest-list" id="digestSchedule"></div>
+    </section>
+
+    <section class="ske-digest-section">
+      <div class="ske-digest-heading">
+        <span class="ske-digest-icon">!</span>
+        <div><small>OFFICIAL NEWS</small><h2>公式ニュース</h2></div>
+      </div>
+      <div class="ske-digest-list" id="digestNews"></div>
+    </section>
+
+    <section class="ske-digest-section">
+      <div class="ske-digest-heading">
+        <span class="ske-digest-icon">✎</span>
+        <div><small>MEMBER BLOG</small><h2>メンバーブログ</h2></div>
+      </div>
+      <div class="ske-digest-list" id="digestBlogs"></div>
+    </section>
+
+    <p class="ske-digest-note">※ 現在はSKE48公式サイト上で確認できる情報を自動整理しています。外部ニュースや各SNSは今後追加予定です。</p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <div><strong class="js-site-name">めがねまるのブログ</strong><p>好きなものを、好きなペースで。</p></div>
+      <p>非公式の個人サイトです。各権利者・団体とは関係ありません。</p>
+    </div>
+  </footer>
+
+  <script src="/config.js"></script>
+  <script src="/app.js"></script>
+  <script src="/ske48/yesterday.js"></script>
+  <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b0c42181e800477e98da10bda2f5b9ce"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
