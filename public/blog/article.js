@@ -19,7 +19,7 @@
       const response = await fetch('/data/posts.json', { cache: 'no-store' });
       if (!response.ok) throw new Error('posts.json could not be loaded');
       const posts = await response.json();
-      const post = posts.find(item => item.slug === slug);
+      const post = posts.find(item => item.slug === slug || item.id === slug);
       if (!post) return showNotFound();
 
       const theme = categoryClass(post.category);

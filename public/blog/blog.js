@@ -15,6 +15,7 @@
   const label = (theme) => theme === 'ske' ? 'DAILY LOG' : theme === 'keiba' ? 'RACE NOTE' : theme === 'game' ? 'PLAY LOG' : theme === 'tool' ? 'WEB TOOL' : 'BLOG NOTE';
   const escapeHtml = (value) => String(value || '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
   const formatDate = (value) => String(value || '').replaceAll('-', '.');
+  const postKey = (post) => post.slug || post.id || '';
 
   let posts = [];
   let activeCategory = new URLSearchParams(location.search).get('category') || 'すべて';
@@ -48,7 +49,8 @@
 
     list.innerHTML = filtered.map(post => {
       const theme = categoryClass(post.category);
-      return `<a class="blog-card" href="/blog/article.html?slug=${encodeURIComponent(post.slug)}">
+      const key = postKey(post);
+      return `<a class="blog-card" href="/blog/article.html?slug=${encodeURIComponent(key)}">
         <div class="thumb thumb-${theme}"><span>${escapeHtml(post.category)}</span><b>${label(theme)}</b></div>
         <div class="article-body">
           <span class="chip chip-${theme}">${escapeHtml(post.category)}</span><time>${formatDate(post.date)}</time>
