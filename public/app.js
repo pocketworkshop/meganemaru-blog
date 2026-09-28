@@ -36,6 +36,8 @@
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
 
+  const postKey = (post) => post.slug || post.id || '';
+
   async function loadLatestPosts() {
     const grid = document.getElementById('latestPosts');
     if (!grid) return;
@@ -49,8 +51,9 @@
 
       grid.innerHTML = latest.map(post => {
         const theme = categoryClass(post.category);
+        const key = postKey(post);
         return `
-          <a class="article-card article-card-link" href="/blog/article.html?slug=${encodeURIComponent(post.slug)}">
+          <a class="article-card article-card-link" href="/blog/article.html?slug=${encodeURIComponent(key)}">
             <div class="thumb thumb-${theme}"><span>${escapeHtml(post.category)}</span><b>${theme === 'ske' ? 'DAILY LOG' : theme === 'tool' ? 'WEB TOOL' : 'BLOG NOTE'}</b></div>
             <div class="article-body">
               <span class="chip chip-${theme}">${escapeHtml(post.category)}</span>
