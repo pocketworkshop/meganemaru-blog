@@ -10,6 +10,7 @@ const SCHEDULE_CATEGORIES = [
 
 const SKE48_YOUTUBE_HANDLE = "https://www.youtube.com/@SKE48_official";
 const BING_NEWS_BASE = "https://www.bing.com/news/search";
+const SKE48_PROFILE_URL = "https://ske48.co.jp/feature/profile";
 
 export default {
   async fetch(request, env, ctx) {
@@ -106,7 +107,7 @@ async function getYesterdayDigest(request, ctx) {
   const origin = new URL(request.url).origin;
 
   const cacheKey = new Request(
-    `${origin}/api/ske48/yesterday?date=${encodeURIComponent(dateKey)}&digest=3`,
+    `${origin}/api/ske48/yesterday?date=${encodeURIComponent(dateKey)}&digest=4`,
     { method: "GET" }
   );
 
@@ -338,14 +339,18 @@ async function fetchMemberBlogs(dottedDate) {
 
 async function fetchExternalNews(target) {
   const sourceUrl = buildBingNewsRss(target);
-  const response = await fetch(sourceUrl, {
-    headers: {
-      Accept: "application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
-      "Accept-Language": "ja-JP,ja;q=0.9",
-      "User-Agent":
-        "Mozilla/5.0 (compatible; MeganemaruBlog/1.0; +https://meganemaru-blog.pwtools.workers.dev/)",
-    },
-  });
+
+  const [response, memberNames] = await Promise.all([
+    fetch(sourceUrl, {
+      headers: {
+        Accept: "application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
+        "Accept-Language": "ja-JP,ja;q=0.9",
+        "User-Agent":
+          "Mozilla/5.0 (compatible; MeganemaruBlog/1.0; +https://meganemaru-blog.pwtools.workers.dev/)",
+      },
+    }),
+    fetchCurrentMemberNames(),
+  ]);
 
   if (!response.ok) {
     return { ok: false, items: [], sourceUrl };
@@ -361,10 +366,6 @@ async function fetchExternalNews(target) {
     const pubDate = cleanXmlText(getTagText(itemXml, "pubDate"));
 
     if (!title || !rawLink || !pubDate) continue;
-
-    // RSSの日付が「昨日」と一致する記事だけを採用。
-    // Google News のような過去記事の再浮上を避けるため、
-    // Bing News の直近24時間＋日付順RSSに切り替えている。
     if (dateKeyInJst(pubDate) !== targetDate) continue;
 
     const url = cleanBingNewsUrl(rawLink);
@@ -375,10 +376,18 @@ async function fetchExternalNews(target) {
       "外部メディア";
 
     if (/ske48\.co\.jp/i.test(url)) continue;
+    if (isLowValueNewsSource(source, url)) continue;
+
+    const cleanTitle = stripNewsSourceSuffix(title, source);
+
+    // 重要:
+    // 検索エンジンは本文や関連記事欄に「SKE48」があるだけでもヒットさせる。
+    // 「昨日のSKE48」では、見出しそのものがSKE48に関係している記事だけ残す。
+    if (!isSkeRelevantHeadline(cleanTitle, memberNames)) continue;
 
     items.push({
       source,
-      title: stripNewsSourceSuffix(title, source),
+      title: cleanTitle,
       url,
       publishedAt: pubDate,
     });
@@ -388,45 +397,80 @@ async function fetchExternalNews(target) {
     ok: true,
     items: dedupeBy(items, (item) => normalizeTitle(item.title)).slice(0, 12),
     sourceUrl,
+    debug: {
+      memberNameCount: memberNames.length,
+      relevanceMode: "headline-only",
+    },
   };
 }
 
-function buildBingNewsRss(target) {
-  const query = encodeURIComponent('"SKE48"');
-  // interval="7" = 直近1日。さらに下でJSTの日付を完全一致させる。
-  return (
-    `${BING_NEWS_BASE}?q=${query}` +
-    `&qft=interval%3d%227%22%2bsortbydate%3d%221%22` +
-    `&format=RSS&setlang=ja-jp&cc=JP`
-  );
-}
-
-function cleanBingNewsUrl(value) {
-  const raw = decodeEntities(value);
-
+async function fetchCurrentMemberNames() {
   try {
-    const url = new URL(raw);
+    const response = await fetchOfficial(SKE48_PROFILE_URL);
+    if (!response.ok) return [];
 
-    if (
-      /(^|\.)bing\.com$/i.test(url.hostname) &&
-      /\/news\/apiclick\.aspx$/i.test(url.pathname)
-    ) {
-      const direct = url.searchParams.get("url");
-      if (direct) return direct;
+    const html = await response.text();
+    const flat = htmlToFlatText(html);
+    const names = [];
+
+    // 公式PROFILEは「相川暖花HONOKA AIKAWA PROFILE」のような並びになる。
+    // 日本語名の直後に英字氏名＋PROFILEが続く箇所だけをメンバー名として抽出する。
+    const pattern =
+      /([一-龯々〆ヵヶぁ-んァ-ヶー]{2,12})\s*(?=[A-Z]{2,}(?:\s+[A-Z]{2,})+\s+PROFILE\b)/g;
+
+    let match;
+    while ((match = pattern.exec(flat)) !== null) {
+      const name = normalizeSpace(match[1]);
+      if (name.length >= 2) names.push(name);
     }
 
-    return url.href;
-  } catch {
-    return raw;
+    return [...new Set(names)];
+  } catch (error) {
+    console.error("SKE48 profile fetch failed:", error);
+    return [];
   }
 }
 
-function hostnameLabel(value) {
-  try {
-    return new URL(value).hostname.replace(/^www\./i, "");
-  } catch {
-    return "";
+function isSkeRelevantHeadline(title, memberNames) {
+  const value = normalizeSpace(title);
+  if (!value) return false;
+
+  // グループ名が見出しに出ていれば採用。
+  if (/\bSKE48\b/i.test(value) || /ＳＫＥ４８/.test(value)) {
+    return true;
   }
+
+  // グループ名がなくても、現役メンバーのフルネームが見出しにあれば採用。
+  return memberNames.some((name) => value.includes(name));
+}
+
+function isLowValueNewsSource(source, url) {
+  const sourceName = normalizeSpace(source).toLowerCase();
+
+  let host = "";
+  try {
+    host = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+  } catch {
+    // Ignore malformed URL here; relevance checks will still run.
+  }
+
+  // 「外部ニュース」欄なので、個人投稿サービスやSNSは混ぜない。
+  if (
+    host === "note.com" ||
+    host.endsWith(".note.com") ||
+    host === "ameblo.jp" ||
+    host.endsWith(".ameblo.jp") ||
+    host === "x.com" ||
+    host === "twitter.com" ||
+    host === "instagram.com" ||
+    host === "tiktok.com" ||
+    host === "youtube.com" ||
+    host === "youtu.be"
+  ) {
+    return true;
+  }
+
+  return sourceName === "note" || sourceName === "note.com";
 }
 
 async function fetchYoutube(target) {
