@@ -1,36 +1,28 @@
-# めがねまるのブログ STEP 1
+# めがねまるのブログ STEP 2
 
-トップページのデザインを実装した静的サイトです。
+STEP 1のトップページに、記事一覧・記事詳細・カテゴリー絞り込み・検索を追加した版です。
 
-## ファイル
-- `public/index.html` : トップページ
-- `public/styles.css` : PC / スマホ対応デザイン
-- `public/app.js` : スマホメニューなど
-- `public/config.js` : サイト名・キャッチコピーの設定
-- `public/assets/mascot.png` : マスコット画像
+## STEP 2で追加したもの
+- `public/data/posts.json` : 記事データ
+- `public/blog/index.html` : 記事一覧
+- `public/blog/blog.js` : 一覧・検索・カテゴリー絞り込み
+- `public/blog/article.html` : 記事詳細
+- `public/blog/article.js` : 記事表示
+- トップページの「最新記事」を `posts.json` から自動表示
 
-## サイト名の変更
-`public/config.js` の次の1行だけ変えればOKです。
+## 記事の仕組み
+記事は今のところ `public/data/posts.json` に保存します。STEP 3では Pages CMS の管理画面からこのデータを簡単に更新できるようにします。
 
-```js
-siteName: 'めがねまるのブログ',
-```
-
-## ローカル確認
-`public` フォルダで簡易Webサーバーを起動すると確認できます。
-
-```bash
-python -m http.server 8000
-```
-
-その後 `http://localhost:8000` を開きます。
-
-## 今回はまだ未実装
-- CMSからの記事投稿
+## まだ未実装
+- Pages CMSからの記事投稿
 - D1
 - SKE48自動取得
 - Cron Trigger
 - Workers AI
 - 握手券管理の実処理
 
-STEP 1では「見た目とレスポンシブ対応」だけ完成させています。
+サイト名やキャッチコピーは `public/config.js` で変更できます。
+
+
+## アクセス解析
+Cloudflare Web Analytics をトップページ・記事一覧・記事詳細ページに組み込み済みです。

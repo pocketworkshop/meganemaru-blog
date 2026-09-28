@@ -1,7 +1,6 @@
 {
   "name": "meganemaru-blog",
   "compatibility_date": "2026-09-28",
-  "workers_dev": true,
   "assets": {
     "directory": "./public"
   }
