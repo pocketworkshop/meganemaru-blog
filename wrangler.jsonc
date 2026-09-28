@@ -1,7 +1,11 @@
 {
   "name": "meganemaru-blog",
-  "compatibility_date": "2026-09-28",
+  "main": "./src/index.js",
+  "compatibility_date": "2026-09-29",
+  "workers_dev": true,
   "assets": {
-    "directory": "./public"
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
   }
 }
