@@ -22,7 +22,7 @@
 
     <nav class="main-nav" id="mainNav" aria-label="メインメニュー">
       <a class="active" href="#top">⌂ ホーム</a>
-      <a href="#latest">▤ 最新記事</a>
+      <a href="/blog/">▤ 最新記事</a>
       <a href="#categories">□ カテゴリー</a>
       <a href="#tools">🔧 便利ツール</a>
     </nav>
@@ -34,7 +34,7 @@
         <p class="eyebrow">MY HOBBY JOURNAL</p>
         <h1>好きなことで、<br />毎日をちょっと<span>楽しく。</span></h1>
         <p class="hero-text">SKE48、競馬、ゲーム、便利なツールまで。<br />好きなことを集めた、のんびりマイペースなブログです。</p>
-        <a class="primary-button" href="#latest">最新記事をチェック <span>›</span></a>
+        <a class="primary-button" href="/blog/">最新記事をチェック <span>›</span></a>
       </div>
 
       <div class="hero-mascot" aria-label="ブログのマスコットキャラクター">
@@ -55,7 +55,7 @@
         <span class="round-arrow">›</span>
       </a>
 
-      <a class="quick-card yesterday" href="#latest">
+      <a class="quick-card yesterday" href="/blog/?category=SKE48">
         <span class="quick-icon">◷</span>
         <div><strong>昨日のSKE48</strong><p>前日の出来事を毎朝まとめる日報アーカイブ。</p></div>
         <span class="round-arrow">›</span>
@@ -72,24 +72,11 @@
       <section class="panel latest-panel" id="latest">
         <div class="section-heading">
           <div><span class="section-kicker">NEW POSTS</span><h2>最新記事</h2></div>
-          <a href="#">すべて見る ›</a>
+          <a href="/blog/">すべて見る ›</a>
         </div>
 
-        <div class="article-grid">
-          <article class="article-card">
-            <div class="thumb thumb-ske"><span>SKE48</span><b>DAILY LOG</b></div>
-            <div class="article-body"><span class="chip chip-ske">SKE48</span><time>2026.09.28</time><h3>昨日のSKE48をまとめて振り返る</h3><p>公演、イベント、メディア出演などをコンパクトに。</p></div>
-          </article>
-
-          <article class="article-card">
-            <div class="thumb thumb-keiba"><span>KEIBA</span><b>RACE NOTE</b></div>
-            <div class="article-body"><span class="chip chip-keiba">競馬</span><time>2026.09.27</time><h3>競馬の気になったことをメモ</h3><p>予想だけじゃなく、競馬場やレースの記録も残します。</p></div>
-          </article>
-
-          <article class="article-card">
-            <div class="thumb thumb-game"><span>GAME</span><b>PLAY LOG</b></div>
-            <div class="article-body"><span class="chip chip-game">ゲーム</span><time>2026.09.26</time><h3>最近遊んでいるゲームの話</h3><p>攻略メモや、遊んでいて気になったことを気軽に。</p></div>
-          </article>
+        <div class="article-grid" id="latestPosts" aria-live="polite">
+          <div class="posts-loading">最新記事を読み込み中...</div>
         </div>
       </section>
 
@@ -97,11 +84,11 @@
         <section class="panel" id="categories">
           <div class="section-heading compact"><div><span class="section-kicker">CATEGORIES</span><h2>カテゴリー</h2></div></div>
           <div class="category-grid">
-            <a href="#ske48"><span class="cat-icon ske-bg">S</span><span><strong>SKE48</strong><small>自動日報・活動ログ</small></span></a>
-            <a href="#"><span class="cat-icon keiba-bg">♞</span><span><strong>競馬</strong><small>予想・競馬場・雑記</small></span></a>
-            <a href="#"><span class="cat-icon game-bg">＋</span><span><strong>ゲーム</strong><small>プレイ記録・攻略メモ</small></span></a>
-            <a href="#tools"><span class="cat-icon tool-bg">🔧</span><span><strong>便利ツール</strong><small>自作Webツール</small></span></a>
-            <a href="#"><span class="cat-icon note-bg">✎</span><span><strong>雑記</strong><small>その他いろいろ</small></span></a>
+            <a href="/blog/?category=SKE48"><span class="cat-icon ske-bg">S</span><span><strong>SKE48</strong><small>自動日報・活動ログ</small></span></a>
+            <a href="/blog/?category=競馬"><span class="cat-icon keiba-bg">♞</span><span><strong>競馬</strong><small>予想・競馬場・雑記</small></span></a>
+            <a href="/blog/?category=ゲーム"><span class="cat-icon game-bg">＋</span><span><strong>ゲーム</strong><small>プレイ記録・攻略メモ</small></span></a>
+            <a href="/blog/?category=便利ツール"><span class="cat-icon tool-bg">🔧</span><span><strong>便利ツール</strong><small>自作Webツール</small></span></a>
+            <a href="/blog/?category=雑記"><span class="cat-icon note-bg">✎</span><span><strong>雑記</strong><small>その他いろいろ</small></span></a>
           </div>
         </section>
 
@@ -137,5 +124,6 @@
 
   <script src="./config.js"></script>
   <script src="./app.js"></script>
+  <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b0c42181e800477e98da10bda2f5b9ce"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
