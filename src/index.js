@@ -9,10 +9,7 @@ const SCHEDULE_CATEGORIES = [
 ];
 
 const SKE48_YOUTUBE_HANDLE = "https://www.youtube.com/@SKE48_official";
-const GOOGLE_NEWS_RSS =
-  "https://news.google.com/rss/search?q=" +
-  encodeURIComponent("SKE48 when:2d") +
-  "&hl=ja&gl=JP&ceid=JP:ja";
+const BING_NEWS_BASE = "https://www.bing.com/news/search";
 
 export default {
   async fetch(request, env, ctx) {
@@ -109,7 +106,7 @@ async function getYesterdayDigest(request, ctx) {
   const origin = new URL(request.url).origin;
 
   const cacheKey = new Request(
-    `${origin}/api/ske48/yesterday?date=${encodeURIComponent(dateKey)}&digest=2`,
+    `${origin}/api/ske48/yesterday?date=${encodeURIComponent(dateKey)}&digest=3`,
     { method: "GET" }
   );
 
@@ -123,7 +120,7 @@ async function getYesterdayDigest(request, ctx) {
         safeSource(() => fetchSchedule(target), "https://ske48.co.jp/schedule/list/"),
         safeSource(() => fetchOfficialNews(dottedDate), "https://ske48.co.jp/news/29/"),
         safeSource(() => fetchMemberBlogs(dottedDate), "https://ske48.co.jp/blog/list/3/0/"),
-        safeSource(() => fetchExternalNews(target), GOOGLE_NEWS_RSS),
+        safeSource(() => fetchExternalNews(target), buildBingNewsRss(target)),
         safeSource(() => fetchYoutube(target), SKE48_YOUTUBE_HANDLE),
       ]);
 
@@ -340,7 +337,7 @@ async function fetchMemberBlogs(dottedDate) {
 }
 
 async function fetchExternalNews(target) {
-  const sourceUrl = GOOGLE_NEWS_RSS;
+  const sourceUrl = buildBingNewsRss(target);
   const response = await fetch(sourceUrl, {
     headers: {
       Accept: "application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
@@ -360,18 +357,29 @@ async function fetchExternalNews(target) {
 
   for (const itemXml of matchBlocks(xml, "item")) {
     const title = cleanXmlText(getTagText(itemXml, "title"));
-    const link = cleanXmlText(getTagText(itemXml, "link"));
+    const rawLink = cleanXmlText(getTagText(itemXml, "link"));
     const pubDate = cleanXmlText(getTagText(itemXml, "pubDate"));
-    const source = cleanXmlText(getTagText(itemXml, "source")) || "外部メディア";
 
-    if (!title || !link || !pubDate) continue;
+    if (!title || !rawLink || !pubDate) continue;
+
+    // RSSの日付が「昨日」と一致する記事だけを採用。
+    // Google News のような過去記事の再浮上を避けるため、
+    // Bing News の直近24時間＋日付順RSSに切り替えている。
     if (dateKeyInJst(pubDate) !== targetDate) continue;
-    if (/ske48\.co\.jp/i.test(itemXml)) continue;
+
+    const url = cleanBingNewsUrl(rawLink);
+    const source =
+      cleanXmlText(getTagText(itemXml, "News:Source")) ||
+      cleanXmlText(getTagText(itemXml, "source")) ||
+      hostnameLabel(url) ||
+      "外部メディア";
+
+    if (/ske48\.co\.jp/i.test(url)) continue;
 
     items.push({
       source,
       title: stripNewsSourceSuffix(title, source),
-      url: link,
+      url,
       publishedAt: pubDate,
     });
   }
@@ -381,6 +389,44 @@ async function fetchExternalNews(target) {
     items: dedupeBy(items, (item) => normalizeTitle(item.title)).slice(0, 12),
     sourceUrl,
   };
+}
+
+function buildBingNewsRss(target) {
+  const query = encodeURIComponent('"SKE48"');
+  // interval="7" = 直近1日。さらに下でJSTの日付を完全一致させる。
+  return (
+    `${BING_NEWS_BASE}?q=${query}` +
+    `&qft=interval%3d%227%22%2bsortbydate%3d%221%22` +
+    `&format=RSS&setlang=ja-jp&cc=JP`
+  );
+}
+
+function cleanBingNewsUrl(value) {
+  const raw = decodeEntities(value);
+
+  try {
+    const url = new URL(raw);
+
+    if (
+      /(^|\.)bing\.com$/i.test(url.hostname) &&
+      /\/news\/apiclick\.aspx$/i.test(url.pathname)
+    ) {
+      const direct = url.searchParams.get("url");
+      if (direct) return direct;
+    }
+
+    return url.href;
+  } catch {
+    return raw;
+  }
+}
+
+function hostnameLabel(value) {
+  try {
+    return new URL(value).hostname.replace(/^www\./i, "");
+  } catch {
+    return "";
+  }
 }
 
 async function fetchYoutube(target) {
