@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#ff6f91" />
-  <meta name="description" content="めがねまるのブログの記事一覧。SKE48、競馬、ゲーム、便利ツール、雑記など。" />
-  <title>最新記事 | めがねまるのブログ</title>
+  <meta name="description" content="めがねまるのブログの記事ページ" />
+  <title>記事 | めがねまるのブログ</title>
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
@@ -23,21 +23,8 @@
     </nav>
   </header>
 
-  <main class="shell">
-    <section class="blog-hero">
-      <span class="section-kicker">BLOG</span>
-      <h1>記事一覧</h1>
-      <p>SKE48、競馬、ゲーム、便利ツール、雑記。気になったことを少しずつ残します。</p>
-    </section>
-
-    <section class="blog-controls" aria-label="記事の絞り込み">
-      <label class="blog-search">⌕ <input id="postSearch" type="search" placeholder="記事を検索" /></label>
-      <div class="filter-row" id="categoryFilters"></div>
-    </section>
-
-    <section class="blog-list" id="blogList" aria-live="polite">
-      <div class="posts-loading">記事を読み込み中...</div>
-    </section>
+  <main class="page-shell article-page" id="articleRoot" aria-live="polite">
+    <div class="posts-loading">記事を読み込み中...</div>
   </main>
 
   <footer class="site-footer">
@@ -49,7 +36,7 @@
 
   <script src="/config.js"></script>
   <script src="/app.js"></script>
-  <script src="/blog/blog.js"></script>
+  <script src="/blog/article.js"></script>
   <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b0c42181e800477e98da10bda2f5b9ce"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
