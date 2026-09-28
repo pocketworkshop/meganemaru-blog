@@ -107,7 +107,7 @@ async function getYesterdayDigest(request, ctx) {
   const origin = new URL(request.url).origin;
 
   const cacheKey = new Request(
-    `${origin}/api/ske48/yesterday?date=${encodeURIComponent(dateKey)}&digest=4`,
+    `${origin}/api/ske48/yesterday?date=${encodeURIComponent(dateKey)}&digest=5`,
     { method: "GET" }
   );
 
@@ -471,6 +471,44 @@ function isLowValueNewsSource(source, url) {
   }
 
   return sourceName === "note" || sourceName === "note.com";
+}
+
+
+function buildBingNewsRss(target) {
+  const query = encodeURIComponent('"SKE48"');
+  return (
+    `${BING_NEWS_BASE}?q=${query}` +
+    `&qft=interval%3d%227%22%2bsortbydate%3d%221%22` +
+    `&format=RSS&setlang=ja-jp&cc=JP`
+  );
+}
+
+function cleanBingNewsUrl(value) {
+  const raw = decodeEntities(value);
+
+  try {
+    const url = new URL(raw);
+
+    if (
+      /(^|\.)bing\.com$/i.test(url.hostname) &&
+      /\/news\/apiclick\.aspx$/i.test(url.pathname)
+    ) {
+      const direct = url.searchParams.get("url");
+      if (direct) return direct;
+    }
+
+    return url.href;
+  } catch {
+    return raw;
+  }
+}
+
+function hostnameLabel(value) {
+  try {
+    return new URL(value).hostname.replace(/^www\./i, "");
+  } catch {
+    return "";
+  }
 }
 
 async function fetchYoutube(target) {
