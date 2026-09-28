@@ -4,7 +4,7 @@
   document.title = `SKE48 | ${siteName}`;
 
   const grid = document.getElementById('skePosts');
-  if (!grid) return;
+  const todayBox = document.querySelector('#today .ske-hub-placeholder');
 
   const escapeHtml = (value) => String(value || '')
     .replaceAll('&','&amp;')
@@ -16,7 +16,75 @@
   const formatDate = (value) => String(value || '').replaceAll('-', '.');
   const postKey = (post) => post.slug || post.id || '';
 
-  async function init() {
+  const kindClass = (category) => ({
+    '公演': 'stage',
+    'リリース': 'release',
+    'イベント': 'event',
+    '握手会': 'meeting',
+    'メディア': 'media',
+    '誕生日': 'birthday',
+    'その他': 'other'
+  })[category] || 'other';
+
+  async function loadTodaySchedule() {
+    if (!todayBox) return;
+
+    todayBox.innerHTML = `
+      <div class="ske-schedule-loading">
+        <span class="ske-schedule-spinner" aria-hidden="true"></span>
+        <strong>公式スケジュールを確認中...</strong>
+      </div>`;
+
+    try {
+      const response = await fetch('/api/ske48/today', { cache: 'no-store' });
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || 'schedule fetch failed');
+      }
+
+      const heading = `${data.month}月${data.day}日（${escapeHtml(data.weekday)}）`;
+
+      if (!data.items?.length) {
+        todayBox.innerHTML = `
+          <div class="ske-schedule-date">${heading}</div>
+          <strong>公式スケジュール上の予定は見つかりませんでした。</strong>
+          <p>追加・変更される場合もあるので、公式ページもあわせて確認してください。</p>
+          <a class="ske-official-link" href="${escapeHtml(data.sourceUrl)}" target="_blank" rel="noopener noreferrer">
+            SKE48公式スケジュールを見る <span>›</span>
+          </a>`;
+        return;
+      }
+
+      todayBox.innerHTML = `
+        <div class="ske-schedule-date">${heading}</div>
+        <div class="ske-schedule-list">
+          ${data.items.map(item => `
+            <a class="ske-schedule-item" href="${escapeHtml(data.sourceUrl)}" target="_blank" rel="noopener noreferrer">
+              <span class="ske-schedule-kind ${kindClass(item.category)}">${escapeHtml(item.category)}</span>
+              <span class="ske-schedule-title">${escapeHtml(item.title)}</span>
+              <span class="ske-schedule-arrow" aria-hidden="true">›</span>
+            </a>
+          `).join('')}
+        </div>
+        <div class="ske-schedule-source">
+          <span>SKE48公式スケジュールから自動取得</span>
+          <a href="${escapeHtml(data.sourceUrl)}" target="_blank" rel="noopener noreferrer">公式で確認 ↗</a>
+        </div>`;
+    } catch (error) {
+      console.error(error);
+      todayBox.innerHTML = `
+        <strong>今日の予定を取得できませんでした。</strong>
+        <p>一時的な通信エラーか、公式サイト側の表示変更の可能性があります。</p>
+        <a class="ske-official-link" href="https://ske48.co.jp/schedule/list/" target="_blank" rel="noopener noreferrer">
+          SKE48公式スケジュールを見る <span>›</span>
+        </a>`;
+    }
+  }
+
+  async function loadSkePosts() {
+    if (!grid) return;
+
     try {
       const response = await fetch('/data/posts.json', { cache: 'no-store' });
       if (!response.ok) throw new Error('posts.json could not be loaded');
@@ -47,5 +115,6 @@
     }
   }
 
-  init();
+  loadTodaySchedule();
+  loadSkePosts();
 })();
