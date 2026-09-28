@@ -1,1 +1,141 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#ff6f91" />
+  <meta name="description" content="SKE48、競馬、ゲーム、便利ツールなど、好きなことを気ままに残す個人ブログ。" />
+  <title>めがねまるのブログ</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="ホーム">
+      <span class="brand-mark" aria-hidden="true">●</span>
+      <span>
+        <strong class="js-site-name">めがねまるのブログ</strong>
+        <small class="js-tagline">好きなことで、毎日をちょっと楽しく。</small>
+      </span>
+    </a>
 
+    <button class="menu-button" id="menuButton" aria-label="メニューを開く" aria-expanded="false">☰</button>
+
+    <nav class="main-nav" id="mainNav" aria-label="メインメニュー">
+      <a class="active" href="#top">⌂ ホーム</a>
+      <a href="#latest">▤ 最新記事</a>
+      <a href="#categories">□ カテゴリー</a>
+      <a href="#tools">🔧 便利ツール</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero shell">
+      <div class="hero-copy">
+        <p class="eyebrow">MY HOBBY JOURNAL</p>
+        <h1>好きなことで、<br />毎日をちょっと<span>楽しく。</span></h1>
+        <p class="hero-text">SKE48、競馬、ゲーム、便利なツールまで。<br />好きなことを集めた、のんびりマイペースなブログです。</p>
+        <a class="primary-button" href="#latest">最新記事をチェック <span>›</span></a>
+      </div>
+
+      <div class="hero-mascot" aria-label="ブログのマスコットキャラクター">
+        <div class="speech">ようこそ！<br /><strong class="js-site-name">めがねまるのブログ</strong>へ</div>
+        <div class="spark spark-1">✦</div>
+        <div class="spark spark-2">✦</div>
+        <img src="./assets/mascot.png" alt="メガネをかけたブログのマスコットキャラクター" />
+        <div class="desk-tags" aria-hidden="true">
+          <span>SKE48</span><span>KEIBA</span><span>GAME</span><span>TOOLS</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="quick-grid shell" aria-label="よく使うページ">
+      <a class="quick-card ske" href="#ske48">
+        <span class="quick-icon">▦</span>
+        <div><strong>今日のSKE48</strong><p>今日の公演・メディア・イベント予定をまとめて表示。</p></div>
+        <span class="round-arrow">›</span>
+      </a>
+
+      <a class="quick-card yesterday" href="#latest">
+        <span class="quick-icon">◷</span>
+        <div><strong>昨日のSKE48</strong><p>前日の出来事を毎朝まとめる日報アーカイブ。</p></div>
+        <span class="round-arrow">›</span>
+      </a>
+
+      <a class="quick-card handshake" href="#tools">
+        <span class="quick-icon">🎟</span>
+        <div><strong>握手券管理</strong><p>購入した券をかんたんに整理する便利ツール。</p></div>
+        <span class="round-arrow">›</span>
+      </a>
+    </section>
+
+    <div class="content-layout shell">
+      <section class="panel latest-panel" id="latest">
+        <div class="section-heading">
+          <div><span class="section-kicker">NEW POSTS</span><h2>最新記事</h2></div>
+          <a href="#">すべて見る ›</a>
+        </div>
+
+        <div class="article-grid">
+          <article class="article-card">
+            <div class="thumb thumb-ske"><span>SKE48</span><b>DAILY LOG</b></div>
+            <div class="article-body"><span class="chip chip-ske">SKE48</span><time>2026.09.28</time><h3>昨日のSKE48をまとめて振り返る</h3><p>公演、イベント、メディア出演などをコンパクトに。</p></div>
+          </article>
+
+          <article class="article-card">
+            <div class="thumb thumb-keiba"><span>KEIBA</span><b>RACE NOTE</b></div>
+            <div class="article-body"><span class="chip chip-keiba">競馬</span><time>2026.09.27</time><h3>競馬の気になったことをメモ</h3><p>予想だけじゃなく、競馬場やレースの記録も残します。</p></div>
+          </article>
+
+          <article class="article-card">
+            <div class="thumb thumb-game"><span>GAME</span><b>PLAY LOG</b></div>
+            <div class="article-body"><span class="chip chip-game">ゲーム</span><time>2026.09.26</time><h3>最近遊んでいるゲームの話</h3><p>攻略メモや、遊んでいて気になったことを気軽に。</p></div>
+          </article>
+        </div>
+      </section>
+
+      <aside class="sidebar">
+        <section class="panel" id="categories">
+          <div class="section-heading compact"><div><span class="section-kicker">CATEGORIES</span><h2>カテゴリー</h2></div></div>
+          <div class="category-grid">
+            <a href="#ske48"><span class="cat-icon ske-bg">S</span><span><strong>SKE48</strong><small>自動日報・活動ログ</small></span></a>
+            <a href="#"><span class="cat-icon keiba-bg">♞</span><span><strong>競馬</strong><small>予想・競馬場・雑記</small></span></a>
+            <a href="#"><span class="cat-icon game-bg">＋</span><span><strong>ゲーム</strong><small>プレイ記録・攻略メモ</small></span></a>
+            <a href="#tools"><span class="cat-icon tool-bg">🔧</span><span><strong>便利ツール</strong><small>自作Webツール</small></span></a>
+            <a href="#"><span class="cat-icon note-bg">✎</span><span><strong>雑記</strong><small>その他いろいろ</small></span></a>
+          </div>
+        </section>
+
+        <section class="panel" id="tools">
+          <div class="section-heading compact"><div><span class="section-kicker">TOOLS</span><h2>便利ツール</h2></div></div>
+          <a class="tool-row" href="#"><span>🎟</span><div><strong>握手券管理</strong><small>端末内に保存してかんたん管理</small></div><b>›</b></a>
+          <a class="tool-row" href="#"><span>▦</span><div><strong>スケジュール</strong><small>趣味の予定を見やすく整理</small></div><b>›</b></a>
+        </section>
+      </aside>
+    </div>
+
+    <section class="ske-section shell" id="ske48">
+      <div class="ske-copy">
+        <span class="section-kicker">SKE48</span>
+        <h2>今日を見て、昨日を残す。</h2>
+        <p>今日の予定は見やすく。昨日の出来事は記録として。将来はCloudflare Workersで自動更新する予定です。</p>
+      </div>
+      <div class="today-box">
+        <span class="today-date">TODAY</span>
+        <strong>今日のSKE48</strong>
+        <p>STEP 5で公式情報から自動取得する機能を追加します。</p>
+        <span class="status-pill">準備中</span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <div><strong class="js-site-name">めがねまるのブログ</strong><p>好きなものを、好きなペースで。</p></div>
+      <p>非公式の個人サイトです。各権利者・団体とは関係ありません。</p>
+    </div>
+  </footer>
+
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
