@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#6f9dff" />
-  <meta name="description" content="前日のSKE48公式スケジュール、公式ニュース、メンバーブログを自動でまとめた日報です。" />
+  <meta name="description" content="前日のSKE48公式情報、外部ニュース、公式YouTubeを自動でまとめた日報です。" />
   <title>昨日のSKE48 | めがねまるのブログ</title>
   <link rel="icon" href="/assets/bear-logo.png" />
   <link rel="stylesheet" href="/styles.css" />
@@ -34,7 +34,7 @@
     <section class="ske-digest-hero">
       <span class="section-kicker">YESTERDAY'S SKE48</span>
       <h1>昨日のSKE48</h1>
-      <p id="digestDate">前日の公式情報を読み込み中...</p>
+      <p id="digestDate">前日の情報を読み込み中...</p>
     </section>
 
     <section class="ske-digest-summary" id="digestSummary">
@@ -45,30 +45,31 @@
     </section>
 
     <section class="ske-digest-section">
-      <div class="ske-digest-heading">
-        <span class="ske-digest-icon">▦</span>
-        <div><small>SCHEDULE</small><h2>公演・イベント・メディア</h2></div>
-      </div>
+      <div class="ske-digest-heading"><span class="ske-digest-icon">▦</span><div><small>SCHEDULE</small><h2>公演・イベント・メディア</h2></div></div>
       <div class="ske-digest-list" id="digestSchedule"></div>
     </section>
 
     <section class="ske-digest-section">
-      <div class="ske-digest-heading">
-        <span class="ske-digest-icon">!</span>
-        <div><small>OFFICIAL NEWS</small><h2>公式ニュース</h2></div>
-      </div>
+      <div class="ske-digest-heading"><span class="ske-digest-icon">!</span><div><small>OFFICIAL NEWS</small><h2>公式ニュース</h2></div></div>
       <div class="ske-digest-list" id="digestNews"></div>
     </section>
 
     <section class="ske-digest-section">
-      <div class="ske-digest-heading">
-        <span class="ske-digest-icon">✎</span>
-        <div><small>MEMBER BLOG</small><h2>メンバーブログ</h2></div>
-      </div>
+      <div class="ske-digest-heading"><span class="ske-digest-icon">✎</span><div><small>MEMBER BLOG</small><h2>メンバーブログ</h2></div></div>
       <div class="ske-digest-list" id="digestBlogs"></div>
     </section>
 
-    <p class="ske-digest-note">※ 現在はSKE48公式サイト上で確認できる情報を自動整理しています。外部ニュースや各SNSは今後追加予定です。</p>
+    <section class="ske-digest-section">
+      <div class="ske-digest-heading"><span class="ske-digest-icon">N</span><div><small>EXTERNAL NEWS</small><h2>外部ニュース</h2></div></div>
+      <div class="ske-digest-list" id="digestExternalNews"></div>
+    </section>
+
+    <section class="ske-digest-section">
+      <div class="ske-digest-heading"><span class="ske-digest-icon">▶</span><div><small>YOUTUBE</small><h2>SKE48公式YouTube</h2></div></div>
+      <div class="ske-digest-list" id="digestYoutube"></div>
+    </section>
+
+    <p class="ske-digest-note">※ SKE48公式サイト、Google News RSS、SKE48公式YouTubeから前日分を自動整理しています。X・Instagram・TikTokなどのSNSは今後追加予定です。</p>
   </main>
 
   <footer class="site-footer">

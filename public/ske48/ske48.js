@@ -35,19 +35,14 @@
 
   async function loadTodaySchedule() {
     if (!todayBox) return;
-
     todayBox.innerHTML = loadingHtml('公式スケジュールを確認中...');
 
     try {
       const response = await fetch('/api/ske48/today', { cache: 'no-store' });
       const data = await response.json();
-
-      if (!response.ok || !data.ok) {
-        throw new Error(data.error || 'schedule fetch failed');
-      }
+      if (!response.ok || !data.ok) throw new Error(data.error || 'schedule fetch failed');
 
       const heading = `${data.month}月${data.day}日（${escapeHtml(data.weekday)}）`;
-
       if (!data.items?.length) {
         todayBox.innerHTML = `
           <div class="ske-schedule-date">${heading}</div>
@@ -87,19 +82,14 @@
 
   async function loadYesterdayDigest() {
     if (!yesterdayBox) return;
-
     yesterdayBox.innerHTML = loadingHtml('昨日の動きをまとめています...');
 
     try {
       const response = await fetch('/api/ske48/yesterday', { cache: 'no-store' });
       const data = await response.json();
-
-      if (!response.ok || !data.ok) {
-        throw new Error(data.error || 'yesterday digest failed');
-      }
+      if (!response.ok || !data.ok) throw new Error(data.error || 'yesterday digest failed');
 
       const heading = `${data.month}月${data.day}日（${escapeHtml(data.weekday)}）`;
-
       yesterdayBox.innerHTML = `
         <div class="ske-yesterday-date">${heading}</div>
         <strong>${escapeHtml(data.summary)}</strong>
@@ -107,6 +97,8 @@
           <span><b>${data.counts.schedule}</b> 予定</span>
           <span><b>${data.counts.news}</b> 公式ニュース</span>
           <span><b>${data.counts.blogs}</b> メンバーブログ</span>
+          <span><b>${data.counts.externalNews}</b> 外部ニュース</span>
+          <span><b>${data.counts.youtube}</b> YouTube</span>
         </div>
         <a class="ske-yesterday-button" href="/ske48/yesterday.html">
           昨日のまとめを詳しく見る <span>›</span>
@@ -115,17 +107,15 @@
       console.error(error);
       yesterdayBox.innerHTML = `
         <strong>昨日のまとめを取得できませんでした。</strong>
-        <p>公式サイトの取得状況を確認して、時間を置いてもう一度お試しください。</p>`;
+        <p>取得先の一部が一時的に利用できない可能性があります。時間を置いてもう一度お試しください。</p>`;
     }
   }
 
   async function loadSkePosts() {
     if (!grid) return;
-
     try {
       const response = await fetch('/data/posts.json', { cache: 'no-store' });
       if (!response.ok) throw new Error('posts.json could not be loaded');
-
       const posts = (await response.json())
         .filter(post => post.category === 'SKE48')
         .sort((a, b) => String(b.date).localeCompare(String(a.date)))
