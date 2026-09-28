@@ -29,7 +29,7 @@ async function getTodaySchedule(request, ctx) {
   const dateKey = `${today.year}-${pad(today.month)}-${pad(today.day)}`;
   const origin = new URL(request.url).origin;
   const cacheKey = new Request(
-    `${origin}/api/ske48/today?date=${encodeURIComponent(dateKey)}`,
+    `${origin}/api/ske48/today?date=${encodeURIComponent(dateKey)}&parser=2`,
     { method: "GET" }
   );
 
@@ -70,6 +70,7 @@ async function getTodaySchedule(request, ctx) {
         items: result.items,
         sourceUrl: result.sourceUrl,
         fetchedAt: new Date().toISOString(),
+        parserVersion: 2,
       },
       200,
       {
@@ -135,46 +136,77 @@ function parseScheduleForDay(html, day) {
     .map((line) => normalizeSpace(line))
     .filter(Boolean);
 
-  const weekdays = "(?:SUN|MON|TUE|WED|THU|FRI|SAT)";
-  const targetDay = new RegExp(`^${day}\\s*${weekdays}(?:\\s|$)`, "i");
-  const anyDay = new RegExp(
-    `^(?:[1-9]|[12]\\d|3[01])\\s*${weekdays}(?:\\s|$)`,
-    "i"
-  );
-
-  const start = lines.findIndex((line) => targetDay.test(line));
-  if (start < 0) return [];
+  const target = findDayHeader(lines, day);
+  if (!target) return [];
 
   const dayLines = [];
-  for (let i = start + 1; i < lines.length; i += 1) {
-    if (anyDay.test(lines[i])) break;
+  for (let i = target.nextIndex; i < lines.length; i += 1) {
+    if (findDayHeader(lines, null, i)) break;
     dayLines.push(lines[i]);
   }
 
   const categoryPattern = SCHEDULE_CATEGORIES.map(escapeRegex).join("|");
-  const inlineEvent = new RegExp(`^(${categoryPattern})\\s*(.+)$`);
+  const inlineEvent = new RegExp(`^(${categoryPattern})\\s*(.*)$`);
 
   const items = [];
   for (let i = 0; i < dayLines.length; i += 1) {
     const line = dayLines[i];
     const match = line.match(inlineEvent);
-
     if (!match) continue;
 
     const category = match[1];
     let title = normalizeSpace(match[2]);
 
-    if (!title && dayLines[i + 1] && !SCHEDULE_CATEGORIES.includes(dayLines[i + 1])) {
-      title = normalizeSpace(dayLines[i + 1]);
-      i += 1;
+    if (!title) {
+      for (let j = i + 1; j < dayLines.length; j += 1) {
+        const candidate = normalizeSpace(dayLines[j]);
+        if (!candidate) continue;
+        if (SCHEDULE_CATEGORIES.includes(candidate)) break;
+        title = candidate;
+        i = j;
+        break;
+      }
     }
 
     if (!title) continue;
-
     items.push({ category, title });
   }
 
   return dedupe(items);
+}
+
+function findDayHeader(lines, wantedDay = null, startIndex = 0) {
+  const weekdayOnly = /^(SUN|MON|TUE|WED|THU|FRI|SAT)$/i;
+  const combined = /^([1-9]|[12]\d|3[01])\s*(SUN|MON|TUE|WED|THU|FRI|SAT)$/i;
+  const numberOnly = /^([1-9]|[12]\d|3[01])$/;
+
+  for (let i = startIndex; i < lines.length; i += 1) {
+    const line = normalizeSpace(lines[i]);
+
+    const combinedMatch = line.match(combined);
+    if (combinedMatch) {
+      const foundDay = Number(combinedMatch[1]);
+      if (wantedDay === null || foundDay === Number(wantedDay)) {
+        return { day: foundDay, nextIndex: i + 1 };
+      }
+      continue;
+    }
+
+    const numberMatch = line.match(numberOnly);
+    if (
+      numberMatch &&
+      i + 1 < lines.length &&
+      weekdayOnly.test(normalizeSpace(lines[i + 1]))
+    ) {
+      const foundDay = Number(numberMatch[1]);
+      if (wantedDay === null || foundDay === Number(wantedDay)) {
+        return { day: foundDay, nextIndex: i + 2 };
+      }
+      i += 1;
+    }
+  }
+
+  return null;
 }
 
 function dedupe(items) {
