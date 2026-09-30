@@ -37,7 +37,7 @@ async function getScheduleForOffset(request, ctx, offsetDays) {
   const dateKey = formatDateKey(target);
   const origin = new URL(request.url).origin;
   const cacheKey = new Request(
-    `${origin}/api/ske48/today?date=${encodeURIComponent(dateKey)}&parser=4`,
+    `${origin}/api/ske48/today?date=${encodeURIComponent(dateKey)}&parser=5`,
     { method: "GET" }
   );
 
@@ -70,9 +70,8 @@ async function getScheduleForOffset(request, ctx, offsetDays) {
       weekday: target.weekdayJa,
       items: result.items,
       sourceUrl: result.sourceUrl,
-      dayUrl: buildScheduleDayUrl(result.sourceUrl, target),
       fetchedAt: new Date().toISOString(),
-      parserVersion: 4,
+      parserVersion: 5,
     };
 
     if (!result.items.length) payload.debug = result.debug;
@@ -254,11 +253,7 @@ async function fetchAndParseSchedule(sourceUrl, day) {
 
   const html = await response.text();
   const flatText = htmlToFlatText(html);
-  const items = attachScheduleDetailUrls(
-    parseFlatSchedule(flatText, day),
-    html,
-    sourceUrl
-  );
+  const items = parseScheduleItemsWithDirectUrls(html, sourceUrl, day);
 
   return {
     ok: true,
@@ -673,6 +668,60 @@ function buildDigestSummary(
   return text;
 }
 
+function parseScheduleItemsWithDirectUrls(html, sourceUrl, day) {
+  const dayToken = String(Number(day));
+  const blocks = String(html).split(
+    /(?=<[^>]+(?:class|id)=["'][^"']*(?:schedule|calendar|day)[^"']*["'][^>]*>)/i
+  );
+
+  // First, narrow the HTML to the target day by visible day heading.
+  const flatAll = htmlToFlatText(html);
+  const dayHeader = new RegExp(
+    `(?:^|\\s)${dayToken}\\s*(?:SUN|MON|TUE|WED|THU|FRI|SAT)(?=\\s)`,
+    "i"
+  );
+  const startMatch = dayHeader.exec(flatAll);
+
+  // We still use the proven flat parser to determine the exact items for the day,
+  // but the URL is taken directly from the anchor whose own visible text is that item.
+  const baseItems = parseFlatSchedule(flatAll, day);
+  const anchors = parseAnchors(html, sourceUrl)
+    .filter((a) => /\/schedule\/detail\/\d+\/?(?:[?#].*)?$/i.test(a.url));
+
+  return baseItems.map((item) => {
+    const titleKey = normalizeScheduleText(item.title);
+    const exact = anchors.filter((anchor) => {
+      const anchorKey = normalizeScheduleText(anchor.text);
+      return anchorKey === titleKey;
+    });
+
+    // If the anchor text includes the category as well, accept that exact form too.
+    const withCategoryKey = normalizeScheduleText(`${item.category}${item.title}`);
+    const exactWithCategory = anchors.filter(
+      (anchor) => normalizeScheduleText(anchor.text) === withCategoryKey
+    );
+
+    const candidates = exact.length ? exact : exactWithCategory;
+
+    // Only attach a detail URL when the page itself gives one unambiguous matching anchor.
+    // Never guess a /schedule/detail/ ID.
+    return {
+      ...item,
+      url: candidates.length === 1 ? candidates[0].url : sourceUrl,
+      hasDetailUrl: candidates.length === 1,
+    };
+  });
+}
+
+function normalizeScheduleText(value) {
+  return decodeEntities(String(value))
+    .replace(/<[^>]+>/g, " ")
+    .replace(/[　\\s]+/g, "")
+    .replace(/[「」『』〖〗【】]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
 function parseFlatSchedule(flatText, day) {
   const dayPattern =
     `(?:^|\\s)${Number(day)}\\s*(?:SUN|MON|TUE|WED|THU|FRI|SAT)(?=\\s)`;
@@ -689,15 +738,8 @@ function parseFlatSchedule(flatText, day) {
   ).exec(after);
 
   let rawSegment = nextDayMatch ? after.slice(0, nextDayMatch.index) : after;
-
-  // 月末最終日は次の日の見出しがないため、フッターまで予定として拾わないようにする。
-  const footerMatch = /\s(?:会社情報|プライバシーポリシー|会員規約|特定商取引法に基づく表記|推奨環境|お問い合わせ)(?=\s)/.exec(
-    rawSegment
-  );
-  if (footerMatch) {
-    rawSegment = rawSegment.slice(0, footerMatch.index);
-  }
-
+  const footerMatch = /\s(?:会社情報|プライバシーポリシー|会員規約|特定商取引法に基づく表記|推奨環境|お問い合わせ)(?=\s)/.exec(rawSegment);
+  if (footerMatch) rawSegment = rawSegment.slice(0, footerMatch.index);
   const segment = normalizeSpace(rawSegment);
 
   const categoryPattern = SCHEDULE_CATEGORIES.map(escapeRegex).join("|");
@@ -716,50 +758,6 @@ function parseFlatSchedule(flatText, day) {
   }
 
   return dedupeBy(items, (item) => `${item.category}\u0000${item.title}`);
-}
-
-function attachScheduleDetailUrls(items, html, baseUrl) {
-  if (!items.length) return items;
-
-  const detailAnchors = parseAnchors(html, baseUrl).filter((anchor) =>
-    /\/schedule\/detail\/\d+\/?(?:[?#].*)?$/i.test(anchor.url)
-  );
-
-  return items.map((item) => {
-    const wanted = normalizeScheduleLabel(`${item.category} ${item.title}`);
-    const wantedTitle = normalizeScheduleLabel(item.title);
-
-    const candidates = detailAnchors.filter((anchor) => {
-      const label = normalizeScheduleLabel(anchor.text);
-      return label === wanted || label.endsWith(wanted) || label.includes(wantedTitle);
-    });
-
-    // 月内に同名項目が複数ある場合は、誤リンクを避けて一覧ページへ戻す。
-    const detailUrl = candidates.length === 1 ? candidates[0].url : "";
-
-    return {
-      ...item,
-      url: detailUrl || baseUrl,
-      hasDetailUrl: Boolean(detailUrl),
-    };
-  });
-}
-
-function normalizeScheduleLabel(value) {
-  return normalizeSpace(value)
-    .replace(/[　\s]+/g, "")
-    .replace(/[「」『』〖〗【】]/g, "")
-    .toLowerCase();
-}
-
-function buildScheduleDayUrl(sourceUrl, target) {
-  const weekdayEn = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][
-    new Date(Date.UTC(target.year, target.month - 1, target.day)).getUTCDay()
-  ];
-  const fragment = encodeURIComponent(`${target.day} ${weekdayEn}`);
-
-  // 公式月間ページに日付固定アンカーがないため、Text Fragmentで当日へ移動する。
-  return `${sourceUrl}#:~:text=${fragment}`;
 }
 
 function parseAnchors(html, baseUrl) {
