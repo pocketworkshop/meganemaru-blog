@@ -48,7 +48,7 @@
           <div class="ske-schedule-date">${heading}</div>
           <strong>公式スケジュール上の予定は見つかりませんでした。</strong>
           <p>追加・変更される場合もあるので、公式ページもあわせて確認してください。</p>
-          <a class="ske-official-link" href="${escapeHtml(data.sourceUrl)}" target="_blank" rel="noopener noreferrer">
+          <a class="ske-official-link" href="${escapeHtml(data.dayUrl || data.sourceUrl)}" target="_blank" rel="noopener noreferrer">
             SKE48公式スケジュールを見る <span>›</span>
           </a>`;
         return;
@@ -58,7 +58,7 @@
         <div class="ske-schedule-date">${heading}</div>
         <div class="ske-schedule-list">
           ${data.items.map(item => `
-            <a class="ske-schedule-item" href="${escapeHtml(data.sourceUrl)}" target="_blank" rel="noopener noreferrer">
+            <a class="ske-schedule-item" href="${escapeHtml(item.url || data.sourceUrl)}" target="_blank" rel="noopener noreferrer">
               <span class="ske-schedule-kind ${kindClass(item.category)}">${escapeHtml(item.category)}</span>
               <span class="ske-schedule-title">${escapeHtml(item.title)}</span>
               <span class="ske-schedule-arrow" aria-hidden="true">›</span>
@@ -67,7 +67,7 @@
         </div>
         <div class="ske-schedule-source">
           <span>SKE48公式スケジュールから自動取得</span>
-          <a href="${escapeHtml(data.sourceUrl)}" target="_blank" rel="noopener noreferrer">公式で確認 ↗</a>
+          <a href="${escapeHtml(data.dayUrl || data.sourceUrl)}" target="_blank" rel="noopener noreferrer">公式で確認 ↗</a>
         </div>`;
     } catch (error) {
       console.error(error);
