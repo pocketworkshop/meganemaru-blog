@@ -30,6 +30,17 @@
 
   const empty = (text) => `<div class="ske-digest-empty">${escapeHtml(text)}</div>`;
 
+  const summaryParagraphs = (summary) => {
+    const text = String(summary || '').trim();
+    if (!text) return '';
+    const sentences = text.match(/[^。！？]+[。！？]?/g) || [text];
+    return sentences
+      .map(sentence => sentence.trim())
+      .filter(Boolean)
+      .map(sentence => `<p>${escapeHtml(sentence)}</p>`)
+      .join('');
+  };
+
   async function init() {
     try {
       const response = await fetch('/api/ske48/yesterday', { cache: 'no-store' });
@@ -39,7 +50,7 @@
       dateEl.textContent = `${data.year}年${data.month}月${data.day}日（${data.weekday}）`;
       summaryEl.innerHTML = `
         <span class="ske-digest-summary-label">DAILY SUMMARY</span>
-        <h2>${escapeHtml(data.summary)}</h2>
+        <div class="ske-digest-summary-text">${summaryParagraphs(data.summary)}</div>
         <div class="ske-yesterday-stats">
           <span><b>${data.counts.schedule}</b> 予定</span>
           <span><b>${data.counts.news}</b> 公式ニュース</span>
@@ -50,7 +61,7 @@
 
       scheduleEl.innerHTML = data.scheduleItems.length
         ? data.scheduleItems.map(item => `
-          <a class="ske-digest-row" href="${escapeHtml(data.sources.schedule)}" target="_blank" rel="noopener noreferrer">
+          <a class="ske-digest-row" href="${escapeHtml(item.url || data.sources.schedule)}" target="_blank" rel="noopener noreferrer">
             <span class="ske-schedule-kind ${kindClass(item.category)}">${escapeHtml(item.category)}</span>
             <strong>${escapeHtml(item.title)}</strong><span>›</span>
           </a>`).join('')
