@@ -27,6 +27,17 @@
     'その他': 'other'
   })[category] || 'other';
 
+  const summaryParagraphs = (summary) => {
+    const text = String(summary || '').trim();
+    if (!text) return '';
+    const sentences = text.match(/[^。！？]+[。！？]?/g) || [text];
+    return sentences
+      .map(sentence => sentence.trim())
+      .filter(Boolean)
+      .map(sentence => `<p class="ske-yesterday-summary-line">${escapeHtml(sentence)}</p>`)
+      .join('');
+  };
+
   const loadingHtml = (text) => `
     <div class="ske-schedule-loading">
       <span class="ske-schedule-spinner" aria-hidden="true"></span>
@@ -92,7 +103,7 @@
       const heading = `${data.month}月${data.day}日（${escapeHtml(data.weekday)}）`;
       yesterdayBox.innerHTML = `
         <div class="ske-yesterday-date">${heading}</div>
-        <strong>${escapeHtml(data.summary)}</strong>
+        <div class="ske-yesterday-summary">${summaryParagraphs(data.summary)}</div>
         <div class="ske-yesterday-stats">
           <span><b>${data.counts.schedule}</b> 予定</span>
           <span><b>${data.counts.news}</b> 公式ニュース</span>
