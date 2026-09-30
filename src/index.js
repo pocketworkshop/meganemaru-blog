@@ -37,7 +37,7 @@ async function getScheduleForOffset(request, ctx, offsetDays) {
   const dateKey = formatDateKey(target);
   const origin = new URL(request.url).origin;
   const cacheKey = new Request(
-    `${origin}/api/ske48/today?date=${encodeURIComponent(dateKey)}&parser=5`,
+    `${origin}/api/ske48/today?date=${encodeURIComponent(dateKey)}&parser=6`,
     { method: "GET" }
   );
 
@@ -71,7 +71,7 @@ async function getScheduleForOffset(request, ctx, offsetDays) {
       items: result.items,
       sourceUrl: result.sourceUrl,
       fetchedAt: new Date().toISOString(),
-      parserVersion: 5,
+      parserVersion: 6,
     };
 
     if (!result.items.length) payload.debug = result.debug;
@@ -275,20 +275,14 @@ async function fetchOfficialNews(dottedDate) {
   const sourceUrl = "https://ske48.co.jp/news/29/";
   const response = await fetchOfficial(sourceUrl);
 
-  if (!response.ok) {
-    return { ok: false, items: [], sourceUrl };
-  }
+  if (!response.ok) return { ok: false, items: [], sourceUrl };
 
   const html = await response.text();
   const anchors = parseAnchors(html, sourceUrl);
-
   const items = anchors
     .map((anchor) => {
-      const match = anchor.text.match(
-        /^(.+?)\s+(\d{4}\.\d{2}\.\d{2})\s+(?:NEW\s+)?(.+)$/
-      );
+      const match = anchor.text.match(/^(.+?)\s+(\d{4}\.\d{2}\.\d{2})\s+(?:NEW\s+)?(.+)$/);
       if (!match || match[2] !== dottedDate) return null;
-
       return {
         category: normalizeSpace(match[1]),
         title: normalizeSpace(match[3]),
@@ -308,20 +302,14 @@ async function fetchMemberBlogs(dottedDate) {
   const sourceUrl = "https://ske48.co.jp/blog/list/3/0/";
   const response = await fetchOfficial(sourceUrl);
 
-  if (!response.ok) {
-    return { ok: false, items: [], sourceUrl };
-  }
+  if (!response.ok) return { ok: false, items: [], sourceUrl };
 
   const html = await response.text();
   const anchors = parseAnchors(html, sourceUrl);
-
   const items = anchors
     .map((anchor) => {
-      const match = anchor.text.match(
-        /^(.+?)\s+(\d{4}\.\d{2}\.\d{2})\s+(.+)$/
-      );
+      const match = anchor.text.match(/^(.+?)\s+(\d{4}\.\d{2}\.\d{2})\s+(.+)$/);
       if (!match || match[2] !== dottedDate) return null;
-
       return {
         member: normalizeSpace(match[1]),
         title: normalizeSpace(match[3]),
@@ -352,9 +340,7 @@ async function fetchExternalNews(target) {
     fetchCurrentMemberNames(),
   ]);
 
-  if (!response.ok) {
-    return { ok: false, items: [], sourceUrl };
-  }
+  if (!response.ok) return { ok: false, items: [], sourceUrl };
 
   const xml = await response.text();
   const targetDate = formatDateKey(target);
@@ -379,28 +365,16 @@ async function fetchExternalNews(target) {
     if (isLowValueNewsSource(source, url)) continue;
 
     const cleanTitle = stripNewsSourceSuffix(title, source);
-
-    // 重要:
-    // 検索エンジンは本文や関連記事欄に「SKE48」があるだけでもヒットさせる。
-    // 「昨日のSKE48」では、見出しそのものがSKE48に関係している記事だけ残す。
     if (!isSkeRelevantHeadline(cleanTitle, memberNames)) continue;
 
-    items.push({
-      source,
-      title: cleanTitle,
-      url,
-      publishedAt: pubDate,
-    });
+    items.push({ source, title: cleanTitle, url, publishedAt: pubDate });
   }
 
   return {
     ok: true,
     items: dedupeBy(items, (item) => normalizeTitle(item.title)).slice(0, 12),
     sourceUrl,
-    debug: {
-      memberNameCount: memberNames.length,
-      relevanceMode: "headline-only",
-    },
+    debug: { memberNameCount: memberNames.length, relevanceMode: "headline-only" },
   };
 }
 
@@ -412,9 +386,6 @@ async function fetchCurrentMemberNames() {
     const html = await response.text();
     const flat = htmlToFlatText(html);
     const names = [];
-
-    // 公式PROFILEは「相川暖花HONOKA AIKAWA PROFILE」のような並びになる。
-    // 日本語名の直後に英字氏名＋PROFILEが続く箇所だけをメンバー名として抽出する。
     const pattern =
       /([一-龯々〆ヵヶぁ-んァ-ヶー]{2,12})\s*(?=[A-Z]{2,}(?:\s+[A-Z]{2,})+\s+PROFILE\b)/g;
 
@@ -434,27 +405,18 @@ async function fetchCurrentMemberNames() {
 function isSkeRelevantHeadline(title, memberNames) {
   const value = normalizeSpace(title);
   if (!value) return false;
-
-  // グループ名が見出しに出ていれば採用。
-  if (/\bSKE48\b/i.test(value) || /ＳＫＥ４８/.test(value)) {
-    return true;
-  }
-
-  // グループ名がなくても、現役メンバーのフルネームが見出しにあれば採用。
+  if (/\bSKE48\b/i.test(value) || /ＳＫＥ４８/.test(value)) return true;
   return memberNames.some((name) => value.includes(name));
 }
 
 function isLowValueNewsSource(source, url) {
   const sourceName = normalizeSpace(source).toLowerCase();
-
   let host = "";
+
   try {
     host = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
-  } catch {
-    // Ignore malformed URL here; relevance checks will still run.
-  }
+  } catch {}
 
-  // 「外部ニュース」欄なので、個人投稿サービスやSNSは混ぜない。
   if (
     host === "note.com" ||
     host.endsWith(".note.com") ||
@@ -466,13 +428,10 @@ function isLowValueNewsSource(source, url) {
     host === "tiktok.com" ||
     host === "youtube.com" ||
     host === "youtu.be"
-  ) {
-    return true;
-  }
+  ) return true;
 
   return sourceName === "note" || sourceName === "note.com";
 }
-
 
 function buildBingNewsRss(target) {
   const query = encodeURIComponent('"SKE48"');
@@ -485,10 +444,8 @@ function buildBingNewsRss(target) {
 
 function cleanBingNewsUrl(value) {
   const raw = decodeEntities(value);
-
   try {
     const url = new URL(raw);
-
     if (
       /(^|\.)bing\.com$/i.test(url.hostname) &&
       /\/news\/apiclick\.aspx$/i.test(url.pathname)
@@ -496,7 +453,6 @@ function cleanBingNewsUrl(value) {
       const direct = url.searchParams.get("url");
       if (direct) return direct;
     }
-
     return url.href;
   } catch {
     return raw;
@@ -609,9 +565,7 @@ async function resolveYoutubeChannelId() {
         const match = html.match(pattern);
         if (match?.[1]) return match[1];
       }
-    } catch {
-      // Try the next URL.
-    }
+    } catch {}
   }
 
   return "";
@@ -631,9 +585,7 @@ function buildDigestSummary(
     externalNewsItems.length +
     youtubeItems.length;
 
-  if (!total) {
-    return "確認できた範囲では、大きな動きは少なめでした。";
-  }
+  if (!total) return "確認できた範囲では、大きな動きは少なめでした。";
 
   const parts = [];
   if (scheduleItems.length) parts.push(`公式スケジュール${scheduleItems.length}件`);
@@ -669,46 +621,76 @@ function buildDigestSummary(
 }
 
 function parseScheduleItemsWithDirectUrls(html, sourceUrl, day) {
-  const dayToken = String(Number(day));
-  const blocks = String(html).split(
-    /(?=<[^>]+(?:class|id)=["'][^"']*(?:schedule|calendar|day)[^"']*["'][^>]*>)/i
-  );
-
-  // First, narrow the HTML to the target day by visible day heading.
   const flatAll = htmlToFlatText(html);
-  const dayHeader = new RegExp(
-    `(?:^|\\s)${dayToken}\\s*(?:SUN|MON|TUE|WED|THU|FRI|SAT)(?=\\s)`,
-    "i"
-  );
-  const startMatch = dayHeader.exec(flatAll);
-
-  // We still use the proven flat parser to determine the exact items for the day,
-  // but the URL is taken directly from the anchor whose own visible text is that item.
   const baseItems = parseFlatSchedule(flatAll, day);
-  const anchors = parseAnchors(html, sourceUrl)
-    .filter((a) => /\/schedule\/detail\/\d+\/?(?:[?#].*)?$/i.test(a.url));
+
+  // 同じ番組名が月内の複数日に出るため、月全体のタイトル一致ではURLを決めない。
+  // 各詳細リンクの直前にある「日付見出し」を調べ、対象日のリンクだけに絞る。
+  const targetDay = Number(day);
+  const targetAnchors = [];
+  const anchorPattern =
+    /<a\b[^>]*href\s*=\s*(["'])(.*?)\1[^>]*>([\s\S]*?)<\/a>/gi;
+
+  let anchorMatch;
+  while ((anchorMatch = anchorPattern.exec(String(html))) !== null) {
+    const href = decodeEntities(anchorMatch[2]);
+
+    let absoluteUrl;
+    try {
+      absoluteUrl = new URL(href, sourceUrl).href;
+    } catch {
+      continue;
+    }
+
+    if (!/\/schedule\/detail\/\d+\/?(?:[?#].*)?$/i.test(absoluteUrl)) {
+      continue;
+    }
+
+    // このリンクより前にある、一番近いカレンダーの日付を探す。
+    // 月初でも十分さかのぼれるよう最大30000文字を見る。
+    const prefixStart = Math.max(0, anchorMatch.index - 30000);
+    const prefixText = htmlToFlatText(
+      String(html).slice(prefixStart, anchorMatch.index)
+    );
+
+    const dayPattern =
+      /(?:^|\s)([1-9]|[12]\d|3[01])\s*(SUN|MON|TUE|WED|THU|FRI|SAT)(?=\s)/gi;
+
+    let dayMatch;
+    let nearestDay = null;
+    while ((dayMatch = dayPattern.exec(prefixText)) !== null) {
+      nearestDay = Number(dayMatch[1]);
+    }
+
+    if (nearestDay !== targetDay) continue;
+
+    targetAnchors.push({
+      text: htmlToFlatText(anchorMatch[3]),
+      url: absoluteUrl,
+    });
+  }
 
   return baseItems.map((item) => {
     const titleKey = normalizeScheduleText(item.title);
-    const exact = anchors.filter((anchor) => {
-      const anchorKey = normalizeScheduleText(anchor.text);
-      return anchorKey === titleKey;
-    });
-
-    // If the anchor text includes the category as well, accept that exact form too.
-    const withCategoryKey = normalizeScheduleText(`${item.category}${item.title}`);
-    const exactWithCategory = anchors.filter(
-      (anchor) => normalizeScheduleText(anchor.text) === withCategoryKey
+    const categoryTitleKey = normalizeScheduleText(
+      `${item.category}${item.title}`
     );
 
-    const candidates = exact.length ? exact : exactWithCategory;
+    const candidates = targetAnchors.filter((anchor) => {
+      const anchorKey = normalizeScheduleText(anchor.text);
+      return (
+        anchorKey === titleKey ||
+        anchorKey === categoryTitleKey ||
+        anchorKey.endsWith(titleKey)
+      );
+    });
 
-    // Only attach a detail URL when the page itself gives one unambiguous matching anchor.
-    // Never guess a /schedule/detail/ ID.
+    const unique = dedupeBy(candidates, (anchor) => anchor.url);
+
     return {
       ...item,
-      url: candidates.length === 1 ? candidates[0].url : sourceUrl,
-      hasDetailUrl: candidates.length === 1,
+      url: unique.length === 1 ? unique[0].url : sourceUrl,
+      hasDetailUrl: unique.length === 1,
     };
   });
 }
@@ -716,7 +698,7 @@ function parseScheduleItemsWithDirectUrls(html, sourceUrl, day) {
 function normalizeScheduleText(value) {
   return decodeEntities(String(value))
     .replace(/<[^>]+>/g, " ")
-    .replace(/[　\\s]+/g, "")
+    .replace(/[　\s]+/g, "")
     .replace(/[「」『』〖〗【】]/g, "")
     .trim()
     .toLowerCase();
@@ -772,13 +754,8 @@ function parseAnchors(html, baseUrl) {
     if (!href || !text) continue;
 
     try {
-      anchors.push({
-        text,
-        url: new URL(href, baseUrl).href,
-      });
-    } catch {
-      // Ignore malformed links.
-    }
+      anchors.push({ text, url: new URL(href, baseUrl).href });
+    } catch {}
   }
 
   return anchors;
@@ -879,9 +856,7 @@ function getJstDateParts(offsetDays = 0) {
   });
 
   const nowParts = formatter.formatToParts(new Date());
-  const now = Object.fromEntries(
-    nowParts.map((part) => [part.type, part.value])
-  );
+  const now = Object.fromEntries(nowParts.map((part) => [part.type, part.value]));
 
   const base = Date.UTC(
     Number(now.year),
