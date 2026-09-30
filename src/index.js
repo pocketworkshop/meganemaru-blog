@@ -21,7 +21,11 @@ export default {
     }
 
     if (url.pathname === "/api/ske48/yesterday") {
-      return getYesterdayDigest(request, ctx);
+      return getYesterdayDigest(request, env, ctx);
+    }
+
+    if (url.pathname === "/api/ske48/archive/save-yesterday") {
+      return saveYesterdayToD1(request, env);
     }
 
     return env.ASSETS.fetch(request);
@@ -96,18 +100,17 @@ async function getScheduleForOffset(request, ctx, offsetDays) {
   }
 }
 
-async function getYesterdayDigest(request, ctx) {
+async function getYesterdayDigest(request, env, ctx) {
   if (request.method !== "GET") {
     return json({ ok: false, error: "Method Not Allowed" }, 405);
   }
 
   const target = getJstDateParts(-1);
   const dateKey = formatDateKey(target);
-  const dottedDate = `${target.year}.${pad(target.month)}.${pad(target.day)}`;
   const origin = new URL(request.url).origin;
 
   const cacheKey = new Request(
-    `${origin}/api/ske48/yesterday?date=${encodeURIComponent(dateKey)}&digest=5`,
+    `${origin}/api/ske48/yesterday?date=${encodeURIComponent(dateKey)}&digest=6`,
     { method: "GET" }
   );
 
@@ -116,71 +119,7 @@ async function getYesterdayDigest(request, ctx) {
   if (cached) return cached;
 
   try {
-    const [scheduleResult, newsResult, blogResult, externalNewsResult, youtubeResult] =
-      await Promise.all([
-        safeSource(() => fetchSchedule(target), "https://ske48.co.jp/schedule/list/"),
-        safeSource(() => fetchOfficialNews(dottedDate), "https://ske48.co.jp/news/29/"),
-        safeSource(() => fetchMemberBlogs(dottedDate), "https://ske48.co.jp/blog/list/3/0/"),
-        safeSource(() => fetchExternalNews(target), buildBingNewsRss(target)),
-        safeSource(() => fetchYoutube(target), SKE48_YOUTUBE_HANDLE),
-      ]);
-
-    const scheduleItems = scheduleResult.ok ? scheduleResult.items : [];
-    const newsItems = newsResult.ok ? newsResult.items : [];
-    const blogItems = blogResult.ok ? blogResult.items : [];
-    const externalNewsItems = externalNewsResult.ok ? externalNewsResult.items : [];
-    const youtubeItems = youtubeResult.ok ? youtubeResult.items : [];
-
-    const total =
-      scheduleItems.length +
-      newsItems.length +
-      blogItems.length +
-      externalNewsItems.length +
-      youtubeItems.length;
-
-    const payload = {
-      ok: true,
-      date: dateKey,
-      year: target.year,
-      month: target.month,
-      day: target.day,
-      weekday: target.weekdayJa,
-      scheduleItems,
-      newsItems,
-      blogItems,
-      externalNewsItems,
-      youtubeItems,
-      counts: {
-        schedule: scheduleItems.length,
-        news: newsItems.length,
-        blogs: blogItems.length,
-        externalNews: externalNewsItems.length,
-        youtube: youtubeItems.length,
-        total,
-      },
-      summary: buildDigestSummary(
-        scheduleItems,
-        newsItems,
-        blogItems,
-        externalNewsItems,
-        youtubeItems
-      ),
-      sources: {
-        schedule: scheduleResult.sourceUrl,
-        news: newsResult.sourceUrl,
-        blogs: blogResult.sourceUrl,
-        externalNews: externalNewsResult.sourceUrl,
-        youtube: youtubeResult.sourceUrl,
-      },
-      sourceStatus: {
-        schedule: scheduleResult.ok,
-        news: newsResult.ok,
-        blogs: blogResult.ok,
-        externalNews: externalNewsResult.ok,
-        youtube: youtubeResult.ok,
-      },
-      fetchedAt: new Date().toISOString(),
-    };
+    const payload = await buildYesterdayDigestPayload(target);
 
     const response = json(payload, 200, {
       "Cache-Control": "public, max-age=900",
@@ -200,6 +139,148 @@ async function getYesterdayDigest(request, ctx) {
       502
     );
   }
+}
+
+async function saveYesterdayToD1(request, env) {
+  if (request.method !== "POST" && request.method !== "GET") {
+    return json({ ok: false, error: "Method Not Allowed" }, 405);
+  }
+
+  if (!env.DB) {
+    return json(
+      { ok: false, error: "D1 binding DB is not available." },
+      500
+    );
+  }
+
+  try {
+    const target = getJstDateParts(-1);
+    const payload = await buildYesterdayDigestPayload(target);
+
+    await upsertDailyContent(env.DB, {
+      contentType: "ske48_daily",
+      contentDate: payload.date,
+      title: `昨日のSKE48｜${payload.year}年${payload.month}月${payload.day}日`,
+      summary: payload.summary,
+      contentJson: JSON.stringify(payload),
+    });
+
+    const saved = await env.DB.prepare(
+      `SELECT id, content_type, content_date, title, summary, status, created_at, updated_at
+       FROM daily_contents
+       WHERE content_type = ? AND content_date = ?
+       LIMIT 1`
+    )
+      .bind("ske48_daily", payload.date)
+      .first();
+
+    return json({
+      ok: true,
+      message: "昨日のSKE48をD1に保存しました。",
+      saved,
+      counts: payload.counts,
+    });
+  } catch (error) {
+    console.error("SKE48 D1 save failed:", error);
+    return json(
+      {
+        ok: false,
+        error: "D1への保存に失敗しました。",
+        debug: { message: String(error?.message || error) },
+      },
+      500
+    );
+  }
+}
+
+async function buildYesterdayDigestPayload(target) {
+  const dateKey = formatDateKey(target);
+  const dottedDate = `${target.year}.${pad(target.month)}.${pad(target.day)}`;
+
+  const [scheduleResult, newsResult, blogResult, externalNewsResult, youtubeResult] =
+    await Promise.all([
+      safeSource(() => fetchSchedule(target), "https://ske48.co.jp/schedule/list/"),
+      safeSource(() => fetchOfficialNews(dottedDate), "https://ske48.co.jp/news/29/"),
+      safeSource(() => fetchMemberBlogs(dottedDate), "https://ske48.co.jp/blog/list/3/0/"),
+      safeSource(() => fetchExternalNews(target), buildBingNewsRss(target)),
+      safeSource(() => fetchYoutube(target), SKE48_YOUTUBE_HANDLE),
+    ]);
+
+  const scheduleItems = scheduleResult.ok ? scheduleResult.items : [];
+  const newsItems = newsResult.ok ? newsResult.items : [];
+  const blogItems = blogResult.ok ? blogResult.items : [];
+  const externalNewsItems = externalNewsResult.ok ? externalNewsResult.items : [];
+  const youtubeItems = youtubeResult.ok ? youtubeResult.items : [];
+
+  const total =
+    scheduleItems.length +
+    newsItems.length +
+    blogItems.length +
+    externalNewsItems.length +
+    youtubeItems.length;
+
+  return {
+    ok: true,
+    date: dateKey,
+    year: target.year,
+    month: target.month,
+    day: target.day,
+    weekday: target.weekdayJa,
+    scheduleItems,
+    newsItems,
+    blogItems,
+    externalNewsItems,
+    youtubeItems,
+    counts: {
+      schedule: scheduleItems.length,
+      news: newsItems.length,
+      blogs: blogItems.length,
+      externalNews: externalNewsItems.length,
+      youtube: youtubeItems.length,
+      total,
+    },
+    summary: buildDigestSummary(
+      scheduleItems,
+      newsItems,
+      blogItems,
+      externalNewsItems,
+      youtubeItems
+    ),
+    sources: {
+      schedule: scheduleResult.sourceUrl,
+      news: newsResult.sourceUrl,
+      blogs: blogResult.sourceUrl,
+      externalNews: externalNewsResult.sourceUrl,
+      youtube: youtubeResult.sourceUrl,
+    },
+    sourceStatus: {
+      schedule: scheduleResult.ok,
+      news: newsResult.ok,
+      blogs: blogResult.ok,
+      externalNews: externalNewsResult.ok,
+      youtube: youtubeResult.ok,
+    },
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
+async function upsertDailyContent(
+  db,
+  { contentType, contentDate, title, summary, contentJson }
+) {
+  await db.prepare(
+    `INSERT INTO daily_contents
+      (content_type, content_date, title, summary, content_json, status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, 'published', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+     ON CONFLICT(content_type, content_date) DO UPDATE SET
+       title = excluded.title,
+       summary = excluded.summary,
+       content_json = excluded.content_json,
+       status = excluded.status,
+       updated_at = CURRENT_TIMESTAMP`
+  )
+    .bind(contentType, contentDate, title, summary, contentJson)
+    .run();
 }
 
 async function safeSource(loader, fallbackUrl) {
