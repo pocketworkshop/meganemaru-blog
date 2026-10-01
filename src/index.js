@@ -37,7 +37,7 @@ async function getScheduleForOffset(request, ctx, offsetDays) {
   const dateKey = formatDateKey(target);
   const origin = new URL(request.url).origin;
   const cacheKey = new Request(
-    `${origin}/api/ske48/today?date=${encodeURIComponent(dateKey)}&parser=3`,
+    `${origin}/api/ske48/today?date=${encodeURIComponent(dateKey)}&parser=4`,
     { method: "GET" }
   );
 
@@ -71,7 +71,7 @@ async function getScheduleForOffset(request, ctx, offsetDays) {
       items: result.items,
       sourceUrl: result.sourceUrl,
       fetchedAt: new Date().toISOString(),
-      parserVersion: 3,
+      parserVersion: 4,
     };
 
     if (!result.items.length) payload.debug = result.debug;
@@ -107,7 +107,7 @@ async function getYesterdayDigest(request, ctx) {
   const origin = new URL(request.url).origin;
 
   const cacheKey = new Request(
-    `${origin}/api/ske48/yesterday?date=${encodeURIComponent(dateKey)}&digest=8`,
+    `${origin}/api/ske48/yesterday?date=${encodeURIComponent(dateKey)}&digest=9`,
     { method: "GET" }
   );
 
@@ -252,23 +252,56 @@ async function fetchAndParseSchedule(sourceUrl, day) {
   }
 
   const html = await response.text();
-  const flatText = htmlToFlatText(html);
+  const scheduleList = await extractScheduleListText(html);
+  const flatText = scheduleList.text;
   const items = parseFlatSchedule(flatText, day);
 
   return {
-    ok: true,
+    ok: scheduleList.hasList,
     items,
     sourceUrl,
     debug: {
       httpStatus: response.status,
       contentType,
       htmlLength: html.length,
+      hasScheduleList: scheduleList.hasList,
       textLength: flatText.length,
       hasTargetDay: hasDayHeader(flatText, day),
       looksLikeChallenge:
         /just a moment|checking your browser|cf-chl|challenge-platform/i.test(html),
     },
   };
+}
+
+async function extractScheduleListText(html) {
+  let hasList = false;
+  let text = "";
+
+  // 公式のスケジュール一覧だけを読む。月末の日にもフッターが混ざらない。
+  const rewriter = new HTMLRewriter()
+    .on("ul.list--schedule", {
+      element() {
+        hasList = true;
+      },
+      text(chunk) {
+        text += chunk.text;
+      },
+    })
+    .on("ul.list--schedule *", {
+      element(element) {
+        // タグ境界を空白にする。ストリームのテキスト分割では空白を足さない。
+        text += " ";
+        element.onEndTag(() => {
+          text += " ";
+        });
+      },
+    });
+
+  await rewriter.transform(new Response(html, {
+    headers: { "Content-Type": "text/html; charset=utf-8" },
+  })).text();
+
+  return { hasList, text: normalizeSpace(decodeEntities(text)) };
 }
 
 async function fetchOfficialNews(dottedDate) {
