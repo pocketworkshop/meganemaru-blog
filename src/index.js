@@ -30,6 +30,10 @@ export default {
 
     return env.ASSETS.fetch(request);
   },
+
+  async scheduled(controller, env, ctx) {
+    ctx.waitUntil(saveYesterdayArchive(env));
+  },
 };
 
 async function getScheduleForOffset(request, ctx, offsetDays) {
@@ -146,39 +150,13 @@ async function saveYesterdayToD1(request, env) {
     return json({ ok: false, error: "Method Not Allowed" }, 405);
   }
 
-  if (!env.DB) {
-    return json(
-      { ok: false, error: "D1 binding DB is not available." },
-      500
-    );
-  }
-
   try {
-    const target = getJstDateParts(-1);
-    const payload = await buildYesterdayDigestPayload(target);
-
-    await upsertDailyContent(env.DB, {
-      contentType: "ske48_daily",
-      contentDate: payload.date,
-      title: `昨日のSKE48｜${payload.year}年${payload.month}月${payload.day}日`,
-      summary: payload.summary,
-      contentJson: JSON.stringify(payload),
-    });
-
-    const saved = await env.DB.prepare(
-      `SELECT id, content_type, content_date, title, summary, status, created_at, updated_at
-       FROM daily_contents
-       WHERE content_type = ? AND content_date = ?
-       LIMIT 1`
-    )
-      .bind("ske48_daily", payload.date)
-      .first();
-
+    const result = await saveYesterdayArchive(env);
     return json({
       ok: true,
       message: "昨日のSKE48をD1に保存しました。",
-      saved,
-      counts: payload.counts,
+      saved: result.saved,
+      counts: result.counts,
     });
   } catch (error) {
     console.error("SKE48 D1 save failed:", error);
@@ -191,6 +169,34 @@ async function saveYesterdayToD1(request, env) {
       500
     );
   }
+}
+
+async function saveYesterdayArchive(env) {
+  if (!env.DB) {
+    throw new Error("D1 binding DB is not available.");
+  }
+
+  const target = getJstDateParts(-1);
+  const payload = await buildYesterdayDigestPayload(target);
+
+  await upsertDailyContent(env.DB, {
+    contentType: "ske48_daily",
+    contentDate: payload.date,
+    title: `昨日のSKE48｜${payload.year}年${payload.month}月${payload.day}日`,
+    summary: payload.summary,
+    contentJson: JSON.stringify(payload),
+  });
+
+  const saved = await env.DB.prepare(
+    `SELECT id, content_type, content_date, title, summary, status, created_at, updated_at
+     FROM daily_contents
+     WHERE content_type = ? AND content_date = ?
+     LIMIT 1`
+  )
+    .bind("ske48_daily", payload.date)
+    .first();
+
+  return { saved, counts: payload.counts };
 }
 
 async function buildYesterdayDigestPayload(target) {
