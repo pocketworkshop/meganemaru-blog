@@ -23,6 +23,14 @@
       if (!post) return showNotFound();
 
       const theme = categoryClass(post.category);
+      // Share only the article identifier, without tracking parameters or a fragment.
+      const articleUrl = new URL(location.href);
+      articleUrl.search = '';
+      articleUrl.hash = '';
+      articleUrl.searchParams.set('slug', post.slug || post.id);
+      const shareUrl = new URL('https://x.com/intent/tweet');
+      shareUrl.searchParams.set('text', post.title);
+      shareUrl.searchParams.set('url', articleUrl.href);
       document.title = `${post.title} | めがねまるのブログ`;
       document.querySelector('meta[name="description"]')?.setAttribute('content', post.summary || '');
       root.innerHTML = `
@@ -32,6 +40,9 @@
             <div class="article-meta"><span class="chip chip-${theme}">${escapeHtml(post.category)}</span><time>${formatDate(post.date)}</time></div>
             <h1>${escapeHtml(post.title)}</h1>
             <p class="article-lead">${escapeHtml(post.summary)}</p>
+            <div class="article-share">
+              <a class="article-share-x" href="${escapeHtml(shareUrl.href)}" target="_blank" rel="noopener noreferrer" aria-label="Xで共有（新しいタブで開きます）">Xで共有</a>
+            </div>
           </header>
           <div class="article-prose">${post.bodyHtml || ''}</div>
         </article>`;

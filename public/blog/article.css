@@ -1,0 +1,32 @@
+.article-page .article-share {
+  margin-top: 20px;
+}
+
+.article-page .article-share-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 22px;
+  border: 1px solid #ffc6d4;
+  border-radius: 999px;
+  background: #fff0f4;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.article-page .article-share-x:hover {
+  background: #ffe7ef;
+  border-color: var(--pink);
+}
+
+.article-page .article-share-x:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+}
+
+@media (max-width: 650px) {
+  .article-page .article-share-x {
+    width: 100%;
+  }
+}
