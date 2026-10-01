@@ -21,26 +21,10 @@ export default {
     }
 
     if (url.pathname === "/api/ske48/yesterday") {
-      return getYesterdayDigest(request, env, ctx);
-    }
-
-    if (url.pathname === "/api/ske48/archive/save-yesterday") {
-      return saveYesterdayToD1(request, env);
-    }
-
-    if (url.pathname === "/api/ske48/archive") {
-      return getSke48ArchiveList(request, env);
-    }
-
-    if (url.pathname === "/api/ske48/archive/day") {
-      return getSke48ArchiveDay(request, env);
+      return getYesterdayDigest(request, ctx);
     }
 
     return env.ASSETS.fetch(request);
-  },
-
-  async scheduled(controller, env, ctx) {
-    ctx.waitUntil(saveYesterdayArchive(env));
   },
 };
 
@@ -53,7 +37,7 @@ async function getScheduleForOffset(request, ctx, offsetDays) {
   const dateKey = formatDateKey(target);
   const origin = new URL(request.url).origin;
   const cacheKey = new Request(
-    `${origin}/api/ske48/today?date=${encodeURIComponent(dateKey)}&parser=6`,
+    `${origin}/api/ske48/today?date=${encodeURIComponent(dateKey)}&parser=3`,
     { method: "GET" }
   );
 
@@ -87,7 +71,7 @@ async function getScheduleForOffset(request, ctx, offsetDays) {
       items: result.items,
       sourceUrl: result.sourceUrl,
       fetchedAt: new Date().toISOString(),
-      parserVersion: 6,
+      parserVersion: 3,
     };
 
     if (!result.items.length) payload.debug = result.debug;
@@ -112,17 +96,18 @@ async function getScheduleForOffset(request, ctx, offsetDays) {
   }
 }
 
-async function getYesterdayDigest(request, env, ctx) {
+async function getYesterdayDigest(request, ctx) {
   if (request.method !== "GET") {
     return json({ ok: false, error: "Method Not Allowed" }, 405);
   }
 
   const target = getJstDateParts(-1);
   const dateKey = formatDateKey(target);
+  const dottedDate = `${target.year}.${pad(target.month)}.${pad(target.day)}`;
   const origin = new URL(request.url).origin;
 
   const cacheKey = new Request(
-    `${origin}/api/ske48/yesterday?date=${encodeURIComponent(dateKey)}&digest=6`,
+    `${origin}/api/ske48/yesterday?date=${encodeURIComponent(dateKey)}&digest=7`,
     { method: "GET" }
   );
 
@@ -131,7 +116,71 @@ async function getYesterdayDigest(request, env, ctx) {
   if (cached) return cached;
 
   try {
-    const payload = await buildYesterdayDigestPayload(target);
+    const [scheduleResult, newsResult, blogResult, externalNewsResult, youtubeResult] =
+      await Promise.all([
+        safeSource(() => fetchSchedule(target), "https://ske48.co.jp/schedule/list/"),
+        safeSource(() => fetchOfficialNews(dottedDate), "https://ske48.co.jp/news/29/"),
+        safeSource(() => fetchMemberBlogs(dottedDate), "https://ske48.co.jp/blog/list/3/0/"),
+        safeSource(() => fetchExternalNews(target), buildBingNewsRss(target)),
+        safeSource(() => fetchYoutube(target), SKE48_YOUTUBE_HANDLE),
+      ]);
+
+    const scheduleItems = scheduleResult.ok ? scheduleResult.items : [];
+    const newsItems = newsResult.ok ? newsResult.items : [];
+    const blogItems = blogResult.ok ? blogResult.items : [];
+    const externalNewsItems = externalNewsResult.ok ? externalNewsResult.items : [];
+    const youtubeItems = youtubeResult.ok ? youtubeResult.items : [];
+
+    const total =
+      scheduleItems.length +
+      newsItems.length +
+      blogItems.length +
+      externalNewsItems.length +
+      youtubeItems.length;
+
+    const payload = {
+      ok: true,
+      date: dateKey,
+      year: target.year,
+      month: target.month,
+      day: target.day,
+      weekday: target.weekdayJa,
+      scheduleItems,
+      newsItems,
+      blogItems,
+      externalNewsItems,
+      youtubeItems,
+      counts: {
+        schedule: scheduleItems.length,
+        news: newsItems.length,
+        blogs: blogItems.length,
+        externalNews: externalNewsItems.length,
+        youtube: youtubeItems.length,
+        total,
+      },
+      summary: buildDigestSummary(
+        scheduleItems,
+        newsItems,
+        blogItems,
+        externalNewsItems,
+        youtubeItems
+      ),
+      sources: {
+        schedule: scheduleResult.sourceUrl,
+        news: newsResult.sourceUrl,
+        blogs: blogResult.sourceUrl,
+        externalNews: externalNewsResult.sourceUrl,
+        youtube: youtubeResult.sourceUrl,
+      },
+      sourceStatus: {
+        schedule: scheduleResult.ok,
+        news: newsResult.ok,
+        blogs: blogResult.ok,
+        externalNews: externalNewsResult.ok,
+        youtube: youtubeResult.ok,
+      },
+      fetchedAt: new Date().toISOString(),
+    };
 
     const response = json(payload, 200, {
       "Cache-Control": "public, max-age=900",
@@ -151,206 +200,6 @@ async function getYesterdayDigest(request, env, ctx) {
       502
     );
   }
-}
-
-async function getSke48ArchiveList(request, env) {
-  if (request.method !== "GET") {
-    return json({ ok: false, error: "Method Not Allowed" }, 405);
-  }
-  if (!env.DB) return json({ ok: false, error: "D1 binding DB is not available." }, 500);
-
-  const url = new URL(request.url);
-  const requested = Number(url.searchParams.get("limit") || 50);
-  const limit = Math.max(1, Math.min(100, Number.isFinite(requested) ? requested : 50));
-
-  try {
-    const result = await env.DB.prepare(
-      `SELECT content_date, title, summary, created_at, updated_at
-       FROM daily_contents
-       WHERE content_type = ? AND status = 'published'
-       ORDER BY content_date DESC
-       LIMIT ?`
-    ).bind("ske48_daily", limit).run();
-
-    return json({ ok: true, items: result.results || [] });
-  } catch (error) {
-    console.error("SKE48 archive list failed:", error);
-    return json({ ok: false, error: "過去のSKE48まとめを読み込めませんでした。" }, 500);
-  }
-}
-
-async function getSke48ArchiveDay(request, env) {
-  if (request.method !== "GET") {
-    return json({ ok: false, error: "Method Not Allowed" }, 405);
-  }
-  if (!env.DB) return json({ ok: false, error: "D1 binding DB is not available." }, 500);
-
-  const url = new URL(request.url);
-  const date = String(url.searchParams.get("date") || "").trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    return json({ ok: false, error: "日付の形式が正しくありません。" }, 400);
-  }
-
-  try {
-    const row = await env.DB.prepare(
-      `SELECT content_json
-       FROM daily_contents
-       WHERE content_type = ? AND content_date = ? AND status = 'published'
-       LIMIT 1`
-    ).bind("ske48_daily", date).first();
-
-    if (!row) return json({ ok: false, error: "この日のまとめは保存されていません。" }, 404);
-
-    const payload = JSON.parse(row.content_json);
-    return json(payload, 200, { "Cache-Control": "public, max-age=300" });
-  } catch (error) {
-    console.error("SKE48 archive day failed:", error);
-    return json({ ok: false, error: "保存済みのSKE48まとめを読み込めませんでした。" }, 500);
-  }
-}
-
-async function saveYesterdayToD1(request, env) {
-  if (request.method !== "POST" && request.method !== "GET") {
-    return json({ ok: false, error: "Method Not Allowed" }, 405);
-  }
-
-  try {
-    const result = await saveYesterdayArchive(env);
-    return json({
-      ok: true,
-      message: "昨日のSKE48をD1に保存しました。",
-      saved: result.saved,
-      counts: result.counts,
-    });
-  } catch (error) {
-    console.error("SKE48 D1 save failed:", error);
-    return json(
-      {
-        ok: false,
-        error: "D1への保存に失敗しました。",
-        debug: { message: String(error?.message || error) },
-      },
-      500
-    );
-  }
-}
-
-async function saveYesterdayArchive(env) {
-  if (!env.DB) {
-    throw new Error("D1 binding DB is not available.");
-  }
-
-  const target = getJstDateParts(-1);
-  const payload = await buildYesterdayDigestPayload(target);
-
-  await upsertDailyContent(env.DB, {
-    contentType: "ske48_daily",
-    contentDate: payload.date,
-    title: `昨日のSKE48｜${payload.year}年${payload.month}月${payload.day}日`,
-    summary: payload.summary,
-    contentJson: JSON.stringify(payload),
-  });
-
-  const saved = await env.DB.prepare(
-    `SELECT id, content_type, content_date, title, summary, status, created_at, updated_at
-     FROM daily_contents
-     WHERE content_type = ? AND content_date = ?
-     LIMIT 1`
-  )
-    .bind("ske48_daily", payload.date)
-    .first();
-
-  return { saved, counts: payload.counts };
-}
-
-async function buildYesterdayDigestPayload(target) {
-  const dateKey = formatDateKey(target);
-  const dottedDate = `${target.year}.${pad(target.month)}.${pad(target.day)}`;
-
-  const [scheduleResult, newsResult, blogResult, externalNewsResult, youtubeResult] =
-    await Promise.all([
-      safeSource(() => fetchSchedule(target), "https://ske48.co.jp/schedule/list/"),
-      safeSource(() => fetchOfficialNews(dottedDate), "https://ske48.co.jp/news/29/"),
-      safeSource(() => fetchMemberBlogs(dottedDate), "https://ske48.co.jp/blog/list/3/0/"),
-      safeSource(() => fetchExternalNews(target), buildBingNewsRss(target)),
-      safeSource(() => fetchYoutube(target), SKE48_YOUTUBE_HANDLE),
-    ]);
-
-  const scheduleItems = scheduleResult.ok ? scheduleResult.items : [];
-  const newsItems = newsResult.ok ? newsResult.items : [];
-  const blogItems = blogResult.ok ? blogResult.items : [];
-  const externalNewsItems = externalNewsResult.ok ? externalNewsResult.items : [];
-  const youtubeItems = youtubeResult.ok ? youtubeResult.items : [];
-
-  const total =
-    scheduleItems.length +
-    newsItems.length +
-    blogItems.length +
-    externalNewsItems.length +
-    youtubeItems.length;
-
-  return {
-    ok: true,
-    date: dateKey,
-    year: target.year,
-    month: target.month,
-    day: target.day,
-    weekday: target.weekdayJa,
-    scheduleItems,
-    newsItems,
-    blogItems,
-    externalNewsItems,
-    youtubeItems,
-    counts: {
-      schedule: scheduleItems.length,
-      news: newsItems.length,
-      blogs: blogItems.length,
-      externalNews: externalNewsItems.length,
-      youtube: youtubeItems.length,
-      total,
-    },
-    summary: buildDigestSummary(
-      scheduleItems,
-      newsItems,
-      blogItems,
-      externalNewsItems,
-      youtubeItems
-    ),
-    sources: {
-      schedule: scheduleResult.sourceUrl,
-      news: newsResult.sourceUrl,
-      blogs: blogResult.sourceUrl,
-      externalNews: externalNewsResult.sourceUrl,
-      youtube: youtubeResult.sourceUrl,
-    },
-    sourceStatus: {
-      schedule: scheduleResult.ok,
-      news: newsResult.ok,
-      blogs: blogResult.ok,
-      externalNews: externalNewsResult.ok,
-      youtube: youtubeResult.ok,
-    },
-    fetchedAt: new Date().toISOString(),
-  };
-}
-
-async function upsertDailyContent(
-  db,
-  { contentType, contentDate, title, summary, contentJson }
-) {
-  await db.prepare(
-    `INSERT INTO daily_contents
-      (content_type, content_date, title, summary, content_json, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, 'published', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-     ON CONFLICT(content_type, content_date) DO UPDATE SET
-       title = excluded.title,
-       summary = excluded.summary,
-       content_json = excluded.content_json,
-       status = excluded.status,
-       updated_at = CURRENT_TIMESTAMP`
-  )
-    .bind(contentType, contentDate, title, summary, contentJson)
-    .run();
 }
 
 async function safeSource(loader, fallbackUrl) {
@@ -404,7 +253,7 @@ async function fetchAndParseSchedule(sourceUrl, day) {
 
   const html = await response.text();
   const flatText = htmlToFlatText(html);
-  const items = parseScheduleItemsWithDirectUrls(html, sourceUrl, day);
+  const items = parseFlatSchedule(flatText, day);
 
   return {
     ok: true,
@@ -429,23 +278,68 @@ async function fetchOfficialNews(dottedDate) {
   if (!response.ok) return { ok: false, items: [], sourceUrl };
 
   const html = await response.text();
-  const anchors = parseAnchors(html, sourceUrl);
-  const items = anchors
-    .map((anchor) => {
-      const match = anchor.text.match(/^(.+?)\s+(\d{4}\.\d{2}\.\d{2})\s+(?:NEW\s+)?(.+)$/);
-      if (!match || match[2] !== dottedDate) return null;
-      return {
-        category: normalizeSpace(match[1]),
-        title: normalizeSpace(match[3]),
-        url: anchor.url,
-      };
-    })
-    .filter(Boolean);
+  const items = [];
+  const pattern =
+    /<a\b[^>]*href\s*=\s*(["'])(.*?)\1[^>]*>([\s\S]*?)<\/a>/gi;
+
+  let match;
+  while ((match = pattern.exec(html)) !== null) {
+    const href = decodeEntities(match[2]);
+
+    let url;
+    try {
+      url = new URL(href, sourceUrl).href;
+    } catch {
+      continue;
+    }
+
+    if (!/\/news\/detail\/\d+\/?(?:[?#].*)?$/i.test(url)) continue;
+
+    const title = htmlToFlatText(match[3]);
+    if (!title) continue;
+
+    // NEWS一覧ではカテゴリ・日付・タイトルが別要素になる場合がある。
+    // 詳細リンクの直前にある日付を使い、対象日のニュースだけを拾う。
+    const prefixStart = Math.max(0, match.index - 2500);
+    const prefix = htmlToFlatText(html.slice(prefixStart, match.index));
+
+    const datePattern = /\d{4}\.\d{2}\.\d{2}/g;
+    let dateMatch;
+    let nearestDate = "";
+    while ((dateMatch = datePattern.exec(prefix)) !== null) {
+      nearestDate = dateMatch[0];
+    }
+    if (nearestDate !== dottedDate) continue;
+
+    const knownCategories = [
+      "お知らせ",
+      "その他",
+      "イベント",
+      "生配信",
+      "公演",
+      "メディア",
+      "リリース",
+      "グッズ",
+      "チケット",
+    ];
+
+    const tail = prefix.slice(-160);
+    const category =
+      knownCategories.find((value) => tail.includes(value)) ||
+      "公式ニュース";
+
+    items.push({ category, title, url });
+  }
 
   return {
     ok: true,
-    items: dedupeBy(items, (item) => `${item.category}\u0000${item.title}`),
+    items: dedupeBy(items, (item) => item.url),
     sourceUrl,
+    debug: {
+      parserVersion: 2,
+      targetDate: dottedDate,
+      matched: items.length,
+    },
   };
 }
 
@@ -453,14 +347,20 @@ async function fetchMemberBlogs(dottedDate) {
   const sourceUrl = "https://ske48.co.jp/blog/list/3/0/";
   const response = await fetchOfficial(sourceUrl);
 
-  if (!response.ok) return { ok: false, items: [], sourceUrl };
+  if (!response.ok) {
+    return { ok: false, items: [], sourceUrl };
+  }
 
   const html = await response.text();
   const anchors = parseAnchors(html, sourceUrl);
+
   const items = anchors
     .map((anchor) => {
-      const match = anchor.text.match(/^(.+?)\s+(\d{4}\.\d{2}\.\d{2})\s+(.+)$/);
+      const match = anchor.text.match(
+        /^(.+?)\s+(\d{4}\.\d{2}\.\d{2})\s+(.+)$/
+      );
       if (!match || match[2] !== dottedDate) return null;
+
       return {
         member: normalizeSpace(match[1]),
         title: normalizeSpace(match[3]),
@@ -491,7 +391,9 @@ async function fetchExternalNews(target) {
     fetchCurrentMemberNames(),
   ]);
 
-  if (!response.ok) return { ok: false, items: [], sourceUrl };
+  if (!response.ok) {
+    return { ok: false, items: [], sourceUrl };
+  }
 
   const xml = await response.text();
   const targetDate = formatDateKey(target);
@@ -516,16 +418,28 @@ async function fetchExternalNews(target) {
     if (isLowValueNewsSource(source, url)) continue;
 
     const cleanTitle = stripNewsSourceSuffix(title, source);
+
+    // 重要:
+    // 検索エンジンは本文や関連記事欄に「SKE48」があるだけでもヒットさせる。
+    // 「昨日のSKE48」では、見出しそのものがSKE48に関係している記事だけ残す。
     if (!isSkeRelevantHeadline(cleanTitle, memberNames)) continue;
 
-    items.push({ source, title: cleanTitle, url, publishedAt: pubDate });
+    items.push({
+      source,
+      title: cleanTitle,
+      url,
+      publishedAt: pubDate,
+    });
   }
 
   return {
     ok: true,
     items: dedupeBy(items, (item) => normalizeTitle(item.title)).slice(0, 12),
     sourceUrl,
-    debug: { memberNameCount: memberNames.length, relevanceMode: "headline-only" },
+    debug: {
+      memberNameCount: memberNames.length,
+      relevanceMode: "headline-only",
+    },
   };
 }
 
@@ -537,6 +451,9 @@ async function fetchCurrentMemberNames() {
     const html = await response.text();
     const flat = htmlToFlatText(html);
     const names = [];
+
+    // 公式PROFILEは「相川暖花HONOKA AIKAWA PROFILE」のような並びになる。
+    // 日本語名の直後に英字氏名＋PROFILEが続く箇所だけをメンバー名として抽出する。
     const pattern =
       /([一-龯々〆ヵヶぁ-んァ-ヶー]{2,12})\s*(?=[A-Z]{2,}(?:\s+[A-Z]{2,})+\s+PROFILE\b)/g;
 
@@ -556,18 +473,27 @@ async function fetchCurrentMemberNames() {
 function isSkeRelevantHeadline(title, memberNames) {
   const value = normalizeSpace(title);
   if (!value) return false;
-  if (/\bSKE48\b/i.test(value) || /ＳＫＥ４８/.test(value)) return true;
+
+  // グループ名が見出しに出ていれば採用。
+  if (/\bSKE48\b/i.test(value) || /ＳＫＥ４８/.test(value)) {
+    return true;
+  }
+
+  // グループ名がなくても、現役メンバーのフルネームが見出しにあれば採用。
   return memberNames.some((name) => value.includes(name));
 }
 
 function isLowValueNewsSource(source, url) {
   const sourceName = normalizeSpace(source).toLowerCase();
-  let host = "";
 
+  let host = "";
   try {
     host = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
-  } catch {}
+  } catch {
+    // Ignore malformed URL here; relevance checks will still run.
+  }
 
+  // 「外部ニュース」欄なので、個人投稿サービスやSNSは混ぜない。
   if (
     host === "note.com" ||
     host.endsWith(".note.com") ||
@@ -579,10 +505,13 @@ function isLowValueNewsSource(source, url) {
     host === "tiktok.com" ||
     host === "youtube.com" ||
     host === "youtu.be"
-  ) return true;
+  ) {
+    return true;
+  }
 
   return sourceName === "note" || sourceName === "note.com";
 }
+
 
 function buildBingNewsRss(target) {
   const query = encodeURIComponent('"SKE48"');
@@ -595,8 +524,10 @@ function buildBingNewsRss(target) {
 
 function cleanBingNewsUrl(value) {
   const raw = decodeEntities(value);
+
   try {
     const url = new URL(raw);
+
     if (
       /(^|\.)bing\.com$/i.test(url.hostname) &&
       /\/news\/apiclick\.aspx$/i.test(url.pathname)
@@ -604,6 +535,7 @@ function cleanBingNewsUrl(value) {
       const direct = url.searchParams.get("url");
       if (direct) return direct;
     }
+
     return url.href;
   } catch {
     return raw;
@@ -716,7 +648,9 @@ async function resolveYoutubeChannelId() {
         const match = html.match(pattern);
         if (match?.[1]) return match[1];
       }
-    } catch {}
+    } catch {
+      // Try the next URL.
+    }
   }
 
   return "";
@@ -736,7 +670,9 @@ function buildDigestSummary(
     externalNewsItems.length +
     youtubeItems.length;
 
-  if (!total) return "確認できた範囲では、大きな動きは少なめでした。";
+  if (!total) {
+    return "確認できた範囲では、大きな動きは少なめでした。";
+  }
 
   const parts = [];
   if (scheduleItems.length) parts.push(`公式スケジュール${scheduleItems.length}件`);
@@ -771,90 +707,6 @@ function buildDigestSummary(
   return text;
 }
 
-function parseScheduleItemsWithDirectUrls(html, sourceUrl, day) {
-  const flatAll = htmlToFlatText(html);
-  const baseItems = parseFlatSchedule(flatAll, day);
-
-  // 同じ番組名が月内の複数日に出るため、月全体のタイトル一致ではURLを決めない。
-  // 各詳細リンクの直前にある「日付見出し」を調べ、対象日のリンクだけに絞る。
-  const targetDay = Number(day);
-  const targetAnchors = [];
-  const anchorPattern =
-    /<a\b[^>]*href\s*=\s*(["'])(.*?)\1[^>]*>([\s\S]*?)<\/a>/gi;
-
-  let anchorMatch;
-  while ((anchorMatch = anchorPattern.exec(String(html))) !== null) {
-    const href = decodeEntities(anchorMatch[2]);
-
-    let absoluteUrl;
-    try {
-      absoluteUrl = new URL(href, sourceUrl).href;
-    } catch {
-      continue;
-    }
-
-    if (!/\/schedule\/detail\/\d+\/?(?:[?#].*)?$/i.test(absoluteUrl)) {
-      continue;
-    }
-
-    // このリンクより前にある、一番近いカレンダーの日付を探す。
-    // 月初でも十分さかのぼれるよう最大30000文字を見る。
-    const prefixStart = Math.max(0, anchorMatch.index - 30000);
-    const prefixText = htmlToFlatText(
-      String(html).slice(prefixStart, anchorMatch.index)
-    );
-
-    const dayPattern =
-      /(?:^|\s)([1-9]|[12]\d|3[01])\s*(SUN|MON|TUE|WED|THU|FRI|SAT)(?=\s)/gi;
-
-    let dayMatch;
-    let nearestDay = null;
-    while ((dayMatch = dayPattern.exec(prefixText)) !== null) {
-      nearestDay = Number(dayMatch[1]);
-    }
-
-    if (nearestDay !== targetDay) continue;
-
-    targetAnchors.push({
-      text: htmlToFlatText(anchorMatch[3]),
-      url: absoluteUrl,
-    });
-  }
-
-  return baseItems.map((item) => {
-    const titleKey = normalizeScheduleText(item.title);
-    const categoryTitleKey = normalizeScheduleText(
-      `${item.category}${item.title}`
-    );
-
-    const candidates = targetAnchors.filter((anchor) => {
-      const anchorKey = normalizeScheduleText(anchor.text);
-      return (
-        anchorKey === titleKey ||
-        anchorKey === categoryTitleKey ||
-        anchorKey.endsWith(titleKey)
-      );
-    });
-
-    const unique = dedupeBy(candidates, (anchor) => anchor.url);
-
-    return {
-      ...item,
-      url: unique.length === 1 ? unique[0].url : sourceUrl,
-      hasDetailUrl: unique.length === 1,
-    };
-  });
-}
-
-function normalizeScheduleText(value) {
-  return decodeEntities(String(value))
-    .replace(/<[^>]+>/g, " ")
-    .replace(/[　\s]+/g, "")
-    .replace(/[「」『』〖〗【】]/g, "")
-    .trim()
-    .toLowerCase();
-}
-
 function parseFlatSchedule(flatText, day) {
   const dayPattern =
     `(?:^|\\s)${Number(day)}\\s*(?:SUN|MON|TUE|WED|THU|FRI|SAT)(?=\\s)`;
@@ -870,10 +722,9 @@ function parseFlatSchedule(flatText, day) {
     "i"
   ).exec(after);
 
-  let rawSegment = nextDayMatch ? after.slice(0, nextDayMatch.index) : after;
-  const footerMatch = /\s(?:会社情報|プライバシーポリシー|会員規約|特定商取引法に基づく表記|推奨環境|お問い合わせ)(?=\s)/.exec(rawSegment);
-  if (footerMatch) rawSegment = rawSegment.slice(0, footerMatch.index);
-  const segment = normalizeSpace(rawSegment);
+  const segment = normalizeSpace(
+    nextDayMatch ? after.slice(0, nextDayMatch.index) : after
+  );
 
   const categoryPattern = SCHEDULE_CATEGORIES.map(escapeRegex).join("|");
   const eventPattern = new RegExp(
@@ -905,8 +756,13 @@ function parseAnchors(html, baseUrl) {
     if (!href || !text) continue;
 
     try {
-      anchors.push({ text, url: new URL(href, baseUrl).href });
-    } catch {}
+      anchors.push({
+        text,
+        url: new URL(href, baseUrl).href,
+      });
+    } catch {
+      // Ignore malformed links.
+    }
   }
 
   return anchors;
@@ -1007,7 +863,9 @@ function getJstDateParts(offsetDays = 0) {
   });
 
   const nowParts = formatter.formatToParts(new Date());
-  const now = Object.fromEntries(nowParts.map((part) => [part.type, part.value]));
+  const now = Object.fromEntries(
+    nowParts.map((part) => [part.type, part.value])
+  );
 
   const base = Date.UTC(
     Number(now.year),
