@@ -12,20 +12,22 @@ function blob(){return new Promise(ok=>{
  const W=620,th=THEMES[theme]||THEMES.simple,tmp=document.createElement('canvas').getContext('2d');
  tmp.font='17px sans-serif';
  const bs=msgs.map(m=>({...m,ls:wrap(tmp,m.text,390)}));
- const HH=122+bs.reduce((a,b)=>a+b.ls.length*26+58,0);
+
+ // Each message has: name line + bubble + generous inter-message spacing.
+ // Calculate every pixel before creating the canvas so the last bubble can never run under the footer.
+ const headerH=124, footerH=52, bottomGap=22;
+ const blocks=bs.map(b=>({ ...b, bubbleH:b.ls.length*26+24, blockH:18+(b.ls.length*26+24)+34 }));
+ const HH=headerH+blocks.reduce((sum,b)=>sum+b.blockH,0)+bottomGap+footerH;
+
  const c=document.createElement('canvas');c.width=W*2;c.height=HH*2;
  const x=c.getContext('2d');x.scale(2,2);
-
- // Theme background
  const g=x.createLinearGradient(0,0,W,HH);g.addColorStop(0,th.bg1);g.addColorStop(1,th.bg2);
  x.fillStyle=g;x.fillRect(0,0,W,HH);
 
- // Theme decoration
  x.globalAlpha=.18;x.fillStyle='#fff';
- for(let i=0;i<10;i++){x.beginPath();x.arc(35+(i*67)%570,115+(i*91)%(Math.max(130,HH-180)),8+(i%3)*4,0,Math.PI*2);x.fill()}
+ for(let i=0;i<Math.max(10,Math.floor(HH/100));i++){x.beginPath();x.arc(35+(i*67)%570,115+(i*91)%Math.max(130,HH-190),8+(i%3)*4,0,Math.PI*2);x.fill()}
  x.globalAlpha=1;
 
- // Header card
  x.fillStyle='#fff';rounded(x,14,14,W-28,76,18);
  x.fillStyle=th.accent;x.fillRect(14,14,W-28,6);
  x.fillStyle='#29262b';x.textAlign='center';x.font='bold 20px sans-serif';
@@ -34,25 +36,27 @@ function blob(){return new Promise(ok=>{
  x.fillText([$('#date').value,$('#slot').value.trim()].filter(Boolean).join(' ・ '),W/2,70);
  if(th.decor){x.fillStyle=th.accent;x.font='12px sans-serif';x.fillText(th.decor,W/2,105)}
 
- let y=124;
- for(const b of bs){
+ let y=headerH;
+ for(const b of blocks){
    const right=b.side==='me';
    const bw=Math.min(430,Math.max(105,...b.ls.map(l=>tmp.measureText(l).width+32)));
-   const bh=b.ls.length*26+24,bx=right?W-24-bw:24;
+   const bx=right?W-24-bw:24;
    x.font='12px sans-serif';x.fillStyle='rgba(255,255,255,.96)';x.textAlign=right?'right':'left';
-   x.fillText(nm(b),right?W-25:25,y);y+=8;
+   x.fillText(nm(b),right?W-25:25,y);
+   y+=18;
    x.shadowColor='rgba(40,45,55,.12)';x.shadowBlur=8;x.shadowOffsetY=3;
-   x.fillStyle=right?th.right:th.left;rounded(x,bx,y,bw,bh,17);
+   x.fillStyle=right?th.right:th.left;rounded(x,bx,y,bw,b.bubbleH,17);
    x.shadowColor='transparent';x.shadowBlur=0;x.shadowOffsetY=0;
    x.fillStyle='#29262b';x.textAlign='left';x.font='17px sans-serif';
    b.ls.forEach((l,j)=>x.fillText(l,bx+16,y+25+j*26));
-   y+=bh+34;
+   y+=b.bubbleH+34;
  }
 
- // Footer
- x.fillStyle='rgba(255,255,255,.94)';rounded(x,14,HH-42,W-28,28,12);
+ // Footer is placed after all messages, never on top of them.
+ const fy=HH-footerH;
+ x.fillStyle='rgba(255,255,255,.94)';rounded(x,14,fy+10,W-28,28,12);
  x.fillStyle='#9b9195';x.textAlign='center';x.font='10px sans-serif';
- x.fillText('会話レポメーカー',W/2,HH-24);
+ x.fillText('会話レポメーカー',W/2,fy+29);
  c.toBlob(ok,'image/png');
 })}
 function init(){$('#me').value=localStorage.getItem('report.me')||'';history();persons();head();$('#rememberMe').onclick=()=>{let n=$('#me').value.trim();if(!n)return alert('名前を入力してください');localStorage.setItem('report.me',n);remember(n);speakers();draw();alert('この端末に記憶しました')};$('#me').oninput=()=>{speakers();draw()};$('#addPerson').onclick=()=>{people.push('');persons()};$('#people').oninput=e=>{if(e.target.dataset.person!==undefined){people[+e.target.dataset.person]=e.target.value;speakers();draw()}};$('#people').onchange=e=>{if(e.target.dataset.person!==undefined)remember(e.target.value)};$('#people').onclick=e=>{if(e.target.dataset.delperson!==undefined){let i=+e.target.dataset.delperson;people.splice(i,1);msgs=msgs.filter(m=>m.side!=='other'||m.i!==i).map(m=>m.side==='other'&&m.i>i?{...m,i:m.i-1}:m);sel={side:'me',i:-1};persons()}};$('#speakers').onclick=e=>{let b=e.target.closest('.speaker');if(!b)return;sel=b.dataset.side==='me'?{side:'me',i:-1}:{side:'other',i:+b.dataset.i};speakers()};$('#addMessage').onclick=()=>{let t=$('#message').value.trim();if(!t)return alert('発言を入力してください');if(sel.side==='other'&&!people[sel.i]?.trim())return alert('相手の名前を入力してください');msgs.push({...sel,text:t});if(sel.side==='other')remember(people[sel.i]);$('#message').value='';draw()};['title','date','slot'].forEach(id=>$('#'+id).oninput=head);$('#conversation').onclick=e=>{let i;if(e.target.dataset.del!==undefined)msgs.splice(+e.target.dataset.del,1);else if(e.target.dataset.up!==undefined){i=+e.target.dataset.up;if(i>0)[msgs[i-1],msgs[i]]=[msgs[i],msgs[i-1]]}else if(e.target.dataset.down!==undefined){i=+e.target.dataset.down;if(i<msgs.length-1)[msgs[i+1],msgs[i]]=[msgs[i],msgs[i+1]]}else if(e.target.dataset.edit!==undefined){i=+e.target.dataset.edit;let t=prompt('発言を編集',msgs[i].text);if(t!==null&&t.trim())msgs[i].text=t.trim()}draw()};$('#copy').onclick=async()=>{let s=[$('#title').value.trim()||'会話レポ',[$('#date').value,$('#slot').value.trim()].filter(Boolean).join(' '),...msgs.map(m=>`${nm(m)}「${m.text}」`)].filter(Boolean).join('\n');try{await navigator.clipboard.writeText(s);alert('コピーしました')}catch{alert('コピーできませんでした')}};$('#image').onclick=async()=>{let b=await blob();if(!b)return;let a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='conversation-report.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};$('#shareX').onclick=async()=>{let b=await blob();if(!b)return;let f=new File([b],'conversation-report.png',{type:'image/png'});if(navigator.share&&navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:$('#title').value.trim()||'会話レポ',text:'#会話レポ\n会話レポメーカーで作成しました\nhttps://meganemaru-blog.pwtools.workers.dev/tools/conversation-report/'});return}catch(e){if(e.name==='AbortError')return}}let a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='conversation-report.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);alert('画像を保存しました。Xで画像を添付してください。')};$('#themePicker').onclick=e=>{let b=e.target.closest('.theme-choice');if(!b)return;theme=b.dataset.theme;localStorage.setItem('report.theme',theme);applyTheme()};
