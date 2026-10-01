@@ -14,5 +14,8 @@
       "database_name": "meganemaru-blog-db",
       "database_id": "b574fbc9-2248-47b0-98cb-6c4cfb7265a0"
     }
-  ]
+  ],
+  "triggers": {
+    "crons": ["0 22 * * *"]
+  }
 }
