@@ -28,6 +28,14 @@ export default {
       return saveYesterdayToD1(request, env);
     }
 
+    if (url.pathname === "/api/ske48/archive") {
+      return getSke48ArchiveList(request, env);
+    }
+
+    if (url.pathname === "/api/ske48/archive/day") {
+      return getSke48ArchiveDay(request, env);
+    }
+
     return env.ASSETS.fetch(request);
   },
 
@@ -142,6 +150,62 @@ async function getYesterdayDigest(request, env, ctx) {
       },
       502
     );
+  }
+}
+
+async function getSke48ArchiveList(request, env) {
+  if (request.method !== "GET") {
+    return json({ ok: false, error: "Method Not Allowed" }, 405);
+  }
+  if (!env.DB) return json({ ok: false, error: "D1 binding DB is not available." }, 500);
+
+  const url = new URL(request.url);
+  const requested = Number(url.searchParams.get("limit") || 50);
+  const limit = Math.max(1, Math.min(100, Number.isFinite(requested) ? requested : 50));
+
+  try {
+    const result = await env.DB.prepare(
+      `SELECT content_date, title, summary, created_at, updated_at
+       FROM daily_contents
+       WHERE content_type = ? AND status = 'published'
+       ORDER BY content_date DESC
+       LIMIT ?`
+    ).bind("ske48_daily", limit).run();
+
+    return json({ ok: true, items: result.results || [] });
+  } catch (error) {
+    console.error("SKE48 archive list failed:", error);
+    return json({ ok: false, error: "過去のSKE48まとめを読み込めませんでした。" }, 500);
+  }
+}
+
+async function getSke48ArchiveDay(request, env) {
+  if (request.method !== "GET") {
+    return json({ ok: false, error: "Method Not Allowed" }, 405);
+  }
+  if (!env.DB) return json({ ok: false, error: "D1 binding DB is not available." }, 500);
+
+  const url = new URL(request.url);
+  const date = String(url.searchParams.get("date") || "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return json({ ok: false, error: "日付の形式が正しくありません。" }, 400);
+  }
+
+  try {
+    const row = await env.DB.prepare(
+      `SELECT content_json
+       FROM daily_contents
+       WHERE content_type = ? AND content_date = ? AND status = 'published'
+       LIMIT 1`
+    ).bind("ske48_daily", date).first();
+
+    if (!row) return json({ ok: false, error: "この日のまとめは保存されていません。" }, 404);
+
+    const payload = JSON.parse(row.content_json);
+    return json(payload, 200, { "Cache-Control": "public, max-age=300" });
+  } catch (error) {
+    console.error("SKE48 archive day failed:", error);
+    return json({ ok: false, error: "保存済みのSKE48まとめを読み込めませんでした。" }, 500);
   }
 }
 
