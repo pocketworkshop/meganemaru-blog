@@ -107,7 +107,7 @@ async function getYesterdayDigest(request, ctx) {
   const origin = new URL(request.url).origin;
 
   const cacheKey = new Request(
-    `${origin}/api/ske48/yesterday?date=${encodeURIComponent(dateKey)}&digest=7`,
+    `${origin}/api/ske48/yesterday?date=${encodeURIComponent(dateKey)}&digest=8`,
     { method: "GET" }
   );
 
@@ -273,74 +273,138 @@ async function fetchAndParseSchedule(sourceUrl, day) {
 
 async function fetchOfficialNews(dottedDate) {
   const sourceUrl = "https://ske48.co.jp/news/29/";
-  const response = await fetchOfficial(sourceUrl);
-
-  if (!response.ok) return { ok: false, items: [], sourceUrl };
-
-  const html = await response.text();
+  const maxPages = 5;
   const items = [];
-  const pattern =
-    /<a\b[^>]*href\s*=\s*(["'])(.*?)\1[^>]*>([\s\S]*?)<\/a>/gi;
+  const visitedPages = new Set();
+  let pageUrl = sourceUrl;
+  let pagesFetched = 0;
 
-  let match;
-  while ((match = pattern.exec(html)) !== null) {
-    const href = decodeEntities(match[2]);
+  const finish = (ok, stopReason) => {
+    const uniqueItems = dedupeBy(items, (item) => item.url);
+    const debug = {
+      parserVersion: 3,
+      targetDate: dottedDate,
+      pagesFetched,
+      maxPages,
+      matched: uniqueItems.length,
+      stopReason,
+    };
+    if (!ok) console.error("SKE48 official news fetch incomplete:", debug);
+    return { ok, items: uniqueItems, sourceUrl, debug };
+  };
 
-    let url;
-    try {
-      url = new URL(href, sourceUrl).href;
-    } catch {
-      continue;
+  for (let pageNumber = 1; pageNumber <= maxPages; pageNumber++) {
+    const response = await fetchOfficial(pageUrl);
+    pagesFetched++;
+    if (!response.ok) return finish(false, `http-${response.status}`);
+
+    const page = await parseOfficialNewsPage(response, pageUrl);
+    if (!page.hasList || page.invalidItems) {
+      return finish(false, "unexpected-news-html");
     }
 
-    if (!/\/news\/detail\/\d+\/?(?:[?#].*)?$/i.test(url)) continue;
+    if (!page.items.length) return finish(true, "empty-list");
 
-    const title = htmlToFlatText(match[3]);
-    if (!title) continue;
+    // 同じページが繰り返し返された場合も、正常な0件とは扱わない。
+    const fingerprint = page.items.map((item) => `${item.url}:${item.date}`).join("|");
+    if (visitedPages.has(fingerprint)) return finish(false, "repeated-page");
+    visitedPages.add(fingerprint);
 
-    // NEWS一覧ではカテゴリ・日付・タイトルが別要素になる場合がある。
-    // 詳細リンクの直前にある日付を使い、対象日のニュースだけを拾う。
-    const prefixStart = Math.max(0, match.index - 2500);
-    const prefix = htmlToFlatText(html.slice(prefixStart, match.index));
-
-    const datePattern = /\d{4}\.\d{2}\.\d{2}/g;
-    let dateMatch;
-    let nearestDate = "";
-    while ((dateMatch = datePattern.exec(prefix)) !== null) {
-      nearestDate = dateMatch[0];
+    for (const item of page.items) {
+      if (item.date !== dottedDate) continue;
+      items.push({ category: item.category, title: item.title, url: item.url });
     }
-    if (nearestDate !== dottedDate) continue;
 
-    const knownCategories = [
-      "お知らせ",
-      "その他",
-      "イベント",
-      "生配信",
-      "公演",
-      "メディア",
-      "リリース",
-      "グッズ",
-      "チケット",
-    ];
+    // 公式一覧は掲載日降順。ページ全体を解析してから終了するので、
+    // 対象日がページをまたぐ場合や同じページに古い記事がある場合にも対応。
+    if (page.items.some((item) => item.date < dottedDate)) {
+      return finish(true, "older-than-target");
+    }
+    if (!page.nextUrl) return finish(true, "last-page");
+    if (pageNumber === maxPages) return finish(false, "page-limit");
 
-    const tail = prefix.slice(-160);
-    const category =
-      knownCategories.find((value) => tail.includes(value)) ||
-      "公式ニュース";
-
-    items.push({ category, title, url });
+    const next = new URL(page.nextUrl);
+    if (Number(next.searchParams.get("page")) !== pageNumber + 1) {
+      return finish(false, "unexpected-next-page");
+    }
+    pageUrl = next.href;
   }
 
-  return {
-    ok: true,
-    items: dedupeBy(items, (item) => item.url),
-    sourceUrl,
-    debug: {
-      parserVersion: 2,
-      targetDate: dottedDate,
-      matched: items.length,
+  return finish(false, "page-limit");
+}
+
+async function parseOfficialNewsPage(response, pageUrl) {
+  const page = { hasList: false, items: [], invalidItems: 0, nextUrl: "" };
+  let currentItem = null;
+
+  // 実際のNEWS一覧: ul.list--info > li > a[href]
+  // 同じli内の .cat / p.date / p.tit だけを読み、隣の記事を参照しない。
+  const fieldHandler = (field) => ({
+    text(chunk) {
+      if (currentItem) currentItem[field] += chunk.text;
     },
-  };
+  });
+
+  const rewriter = new HTMLRewriter()
+    .on("ul.list--info", {
+      element() {
+        page.hasList = true;
+      },
+    })
+    .on("ul.list--info > li", {
+      element(element) {
+        const item = { category: "", date: "", title: "", url: "" };
+        currentItem = item;
+        element.onEndTag(() => {
+          for (const field of ["category", "date", "title"]) {
+            item[field] = normalizeSpace(decodeEntities(item[field]));
+          }
+          if (!/^\d{4}\.\d{2}\.\d{2}$/.test(item.date) || !item.title || !item.url) {
+            page.invalidItems++;
+          } else {
+            item.category ||= "公式ニュース";
+            page.items.push(item);
+          }
+          currentItem = null;
+        });
+      },
+    })
+    .on("ul.list--info > li > a[href]", {
+      element(element) {
+        if (!currentItem) return;
+        try {
+          const url = new URL(decodeEntities(element.getAttribute("href")), pageUrl);
+          if (url.origin !== "https://ske48.co.jp" || !/^\/news\/detail\/\d+\/?$/.test(url.pathname)) return;
+          // URL表記揺れでも同じ記事を重複させない。
+          currentItem.url = `${url.origin}${url.pathname.replace(/\/$/, "")}`;
+        } catch {
+          // このliはinvalidItemsとして検出する。
+        }
+      },
+    })
+    .on("ul.list--info > li .cat", fieldHandler("category"))
+    .on("ul.list--info > li p.date", fieldHandler("date"))
+    .on("ul.list--info > li p.tit", fieldHandler("title"))
+    .on("ul.block--pager > li.pager__item--older > a[href]", {
+      element(element) {
+        try {
+          const url = new URL(decodeEntities(element.getAttribute("href")), pageUrl);
+          if (
+            url.origin === "https://ske48.co.jp" &&
+            url.pathname === "/news/29/" &&
+            /^\d+$/.test(url.searchParams.get("page") || "")
+          ) {
+            page.nextUrl = url.href;
+          }
+        } catch {
+          // URLとして解釈できないリンクは追わない。
+        }
+      },
+    });
+
+  // HTMLRewriterはストリーム処理なので、最後まで消費して解析を完了する。
+  await rewriter.transform(response).text();
+  return page;
 }
 
 async function fetchMemberBlogs(dottedDate) {
