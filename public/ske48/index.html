@@ -9,109 +9,35 @@
   <link rel="icon" href="/assets/bear-logo.png" />
   <link rel="stylesheet" href="/styles.css" />
   <link rel="stylesheet" href="/ske48/ske48.css" />
+  <link rel="stylesheet" href="/ske48/archive.css" />
 </head>
 <body class="ske-page">
   <header class="site-header">
     <a class="brand" href="/" aria-label="ホーム">
       <img class="brand-logo" src="/assets/bear-logo.png" alt="" aria-hidden="true" />
-      <span>
-        <strong class="js-site-name">めがねまるのブログ</strong>
-        <small class="js-tagline">好きなことで、毎日をちょっと楽しく。</small>
-      </span>
+      <span><strong class="js-site-name">めがねまるのブログ</strong><small class="js-tagline">好きなことで、毎日をちょっと楽しく。</small></span>
     </a>
-
     <button class="menu-button" id="menuButton" aria-label="メニューを開く" aria-expanded="false">☰</button>
-
     <nav class="main-nav" id="mainNav" aria-label="メインメニュー">
-      <a href="/">⌂ ホーム</a>
-      <a href="/blog/">▤ 最新記事</a>
-      <a class="active" href="/ske48/">S SKE48</a>
-      <a href="/#tools">🔧 便利ツール</a>
+      <a href="/">⌂ ホーム</a><a href="/blog/">▤ 最新記事</a><a class="active" href="/ske48/">S SKE48</a><a href="/#tools">🔧 便利ツール</a>
     </nav>
   </header>
-
   <main>
     <section class="ske-hub-hero shell">
-      <div class="ske-hub-copy">
-        <span class="ske-hub-label">SKE48 HUB</span>
-        <h1>SKE48を、<br />ここにまとめる。</h1>
-        <p>今日の予定はすぐ確認。昨日の出来事はあとから振り返る。<br />SKE48関連の記事も、このページからまとめて見られます。</p>
-      </div>
-      <div class="ske-hub-badge" aria-hidden="true">
-        <span>SKE48</span>
-        <b>DAILY<br />HUB</b>
-      </div>
+      <div class="ske-hub-copy"><span class="ske-hub-label">SKE48 HUB</span><h1>SKE48を、<br />ここにまとめる。</h1><p>今日の予定はすぐ確認。昨日の出来事はあとから振り返る。<br />SKE48関連の記事も、このページからまとめて見られます。</p></div>
+      <div class="ske-hub-badge" aria-hidden="true"><span>SKE48</span><b>DAILY<br />HUB</b></div>
     </section>
-
     <section class="ske-hub-dashboard shell">
-      <article class="ske-hub-feature today" id="today">
-        <div class="ske-hub-feature-head">
-          <span class="ske-hub-icon">▦</span>
-          <div>
-            <small>TODAY</small>
-            <h2>今日のSKE48</h2>
-          </div>
-        </div>
-        <div class="ske-hub-placeholder">
-          <strong>今日の予定はSTEP 5で自動化します</strong>
-          <p>公演・ライブ・イベント・テレビ・ラジオ・配信などを、ここに時系列で表示する予定です。</p>
-          <span class="status-pill">準備中</span>
-        </div>
-      </article>
-
-      <article class="ske-hub-feature yesterday" id="yesterday">
-        <div class="ske-hub-feature-head">
-          <span class="ske-hub-icon">◷</span>
-          <div>
-            <small>YESTERDAY</small>
-            <h2>昨日のSKE48</h2>
-          </div>
-        </div>
-        <div class="ske-hub-placeholder">
-          <strong>毎朝の振り返り記事をここから</strong>
-          <p>STEP 6で、前日の公式情報やメンバー本人の発信をまとめた日報を自動作成する予定です。</p>
-          <a class="ske-hub-link" href="/blog/?category=SKE48">いまあるSKE48記事を見る <span>›</span></a>
-        </div>
-      </article>
+      <article class="ske-hub-feature today" id="today"><div class="ske-hub-feature-head"><span class="ske-hub-icon">▦</span><div><small>TODAY</small><h2>今日のSKE48</h2></div></div><div class="ske-hub-placeholder"><strong>今日の予定を読み込み中...</strong></div></article>
+      <article class="ske-hub-feature yesterday" id="yesterday"><div class="ske-hub-feature-head"><span class="ske-hub-icon">◷</span><div><small>YESTERDAY</small><h2>昨日のSKE48</h2></div></div><div class="ske-hub-placeholder"><strong>昨日のまとめを読み込み中...</strong></div></article>
     </section>
-
-    <section class="ske-hub-posts shell">
-      <div class="section-heading">
-        <div>
-          <span class="section-kicker">SKE48 POSTS</span>
-          <h2>SKE48の記事</h2>
-        </div>
-        <a href="/blog/?category=SKE48">すべて見る ›</a>
-      </div>
-      <div class="ske-hub-post-grid" id="skePosts" aria-live="polite">
-        <div class="posts-loading">SKE48の記事を読み込み中...</div>
-      </div>
+    <section class="ske-archive-cta shell">
+      <div><span class="section-kicker">DAILY ARCHIVE</span><h2>過去の「昨日のSKE48」</h2><p>D1に保存された日報を、日付ごとにさかのぼって読めます。</p></div>
+      <a class="ske-archive-cta-button" href="/ske48/archive.html">過去のまとめを見る <span>›</span></a>
     </section>
-
-    <section class="ske-hub-roadmap shell">
-      <div>
-        <span class="section-kicker">COMING NEXT</span>
-        <h2>このページは、ここから育てます。</h2>
-        <p>まずはSKE48専用の入口を作りました。次のSTEPから、実際の予定や日報が自動で入るようにしていきます。</p>
-      </div>
-      <div class="ske-hub-roadmap-list">
-        <div><b>STEP 5</b><span>今日のSKE48を自動更新</span></div>
-        <div><b>STEP 6</b><span>昨日のSKE48を自動記事化</span></div>
-        <div><b>STEP 7</b><span>日報・活動ログを蓄積</span></div>
-      </div>
-    </section>
+    <section class="ske-hub-posts shell"><div class="section-heading"><div><span class="section-kicker">SKE48 POSTS</span><h2>SKE48の記事</h2></div><a href="/blog/?category=SKE48">すべて見る ›</a></div><div class="ske-hub-post-grid" id="skePosts" aria-live="polite"><div class="posts-loading">SKE48の記事を読み込み中...</div></div></section>
   </main>
-
-  <footer class="site-footer">
-    <div class="shell footer-inner">
-      <div><strong class="js-site-name">めがねまるのブログ</strong><p>好きなものを、好きなペースで。</p></div>
-      <p>非公式の個人サイトです。各権利者・団体とは関係ありません。</p>
-    </div>
-  </footer>
-
-  <script src="/config.js"></script>
-  <script src="/app.js"></script>
-  <script src="/ske48/ske48.js"></script>
+  <footer class="site-footer"><div class="shell footer-inner"><div><strong class="js-site-name">めがねまるのブログ</strong><p>好きなものを、好きなペースで。</p></div><p>非公式の個人サイトです。各権利者・団体とは関係ありません。</p></div></footer>
+  <script src="/config.js"></script><script src="/app.js"></script><script src="/ske48/ske48.js"></script>
   <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b0c42181e800477e98da10bda2f5b9ce"}'></script><!-- End Cloudflare Web Analytics -->
-</body>
-</html>
+</body></html>

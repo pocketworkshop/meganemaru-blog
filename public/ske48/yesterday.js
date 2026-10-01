@@ -1,118 +1,27 @@
 (() => {
   const cfg = window.SITE_CONFIG || {};
-  const siteName = cfg.siteName || 'めがねまるのブログ';
-  document.title = `昨日のSKE48 | ${siteName}`;
-
-  const dateEl = document.getElementById('digestDate');
-  const summaryEl = document.getElementById('digestSummary');
-  const scheduleEl = document.getElementById('digestSchedule');
-  const newsEl = document.getElementById('digestNews');
-  const blogsEl = document.getElementById('digestBlogs');
-  const externalNewsEl = document.getElementById('digestExternalNews');
-  const youtubeEl = document.getElementById('digestYoutube');
-
-  const escapeHtml = (value) => String(value || '')
-    .replaceAll('&','&amp;')
-    .replaceAll('<','&lt;')
-    .replaceAll('>','&gt;')
-    .replaceAll('"','&quot;')
-    .replaceAll("'",'&#039;');
-
-  const kindClass = (category) => ({
-    '公演': 'stage',
-    'リリース': 'release',
-    'イベント': 'event',
-    '握手会': 'meeting',
-    'メディア': 'media',
-    '誕生日': 'birthday',
-    'その他': 'other'
-  })[category] || 'other';
-
-  const empty = (text) => `<div class="ske-digest-empty">${escapeHtml(text)}</div>`;
-
-  const summaryParagraphs = (summary) => {
-    const text = String(summary || '').trim();
-    if (!text) return '';
-    const sentences = text.match(/[^。！？]+[。！？]?/g) || [text];
-    return sentences
-      .map(sentence => sentence.trim())
-      .filter(Boolean)
-      .map(sentence => `<p>${escapeHtml(sentence)}</p>`)
-      .join('');
-  };
-
-  async function init() {
-    try {
-      const response = await fetch('/api/ske48/yesterday', { cache: 'no-store' });
-      const data = await response.json();
-      if (!response.ok || !data.ok) throw new Error(data.error || 'digest failed');
-
-      dateEl.textContent = `${data.year}年${data.month}月${data.day}日（${data.weekday}）`;
-      summaryEl.innerHTML = `
-        <span class="ske-digest-summary-label">DAILY SUMMARY</span>
-        <div class="ske-digest-summary-text">${summaryParagraphs(data.summary)}</div>
-        <div class="ske-yesterday-stats">
-          <span><b>${data.counts.schedule}</b> 予定</span>
-          <span><b>${data.counts.news}</b> 公式ニュース</span>
-          <span><b>${data.counts.blogs}</b> メンバーブログ</span>
-          <span><b>${data.counts.externalNews}</b> 外部ニュース</span>
-          <span><b>${data.counts.youtube}</b> YouTube</span>
-        </div>`;
-
-      scheduleEl.innerHTML = data.scheduleItems.length
-        ? data.scheduleItems.map(item => `
-          <a class="ske-digest-row" href="${escapeHtml(item.url || data.sources.schedule)}" target="_blank" rel="noopener noreferrer">
-            <span class="ske-schedule-kind ${kindClass(item.category)}">${escapeHtml(item.category)}</span>
-            <strong>${escapeHtml(item.title)}</strong><span>›</span>
-          </a>`).join('')
-        : empty('公式スケジュール上の項目は見つかりませんでした。');
-
-      newsEl.innerHTML = data.newsItems.length
-        ? data.newsItems.map(item => `
-          <a class="ske-digest-row" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">
-            <span class="ske-digest-tag">${escapeHtml(item.category)}</span>
-            <strong>${escapeHtml(item.title)}</strong><span>›</span>
-          </a>`).join('')
-        : empty('この日付の公式ニュースは見つかりませんでした。');
-
-      blogsEl.innerHTML = data.blogItems.length
-        ? data.blogItems.map(item => `
-          <a class="ske-digest-row" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">
-            <span class="ske-digest-tag member">${escapeHtml(item.member)}</span>
-            <strong>${escapeHtml(item.title)}</strong><span>›</span>
-          </a>`).join('')
-        : empty('この日付のメンバーブログは見つかりませんでした。');
-
-      externalNewsEl.innerHTML = data.externalNewsItems.length
-        ? data.externalNewsItems.map(item => `
-          <a class="ske-digest-row" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">
-            <span class="ske-digest-tag">${escapeHtml(item.source)}</span>
-            <strong>${escapeHtml(item.title)}</strong><span>›</span>
-          </a>`).join('')
-        : empty(data.sourceStatus?.externalNews === false
-          ? '外部ニュースを一時的に取得できませんでした。'
-          : 'この日付の外部ニュースは見つかりませんでした。');
-
-      youtubeEl.innerHTML = data.youtubeItems.length
-        ? data.youtubeItems.map(item => `
-          <a class="ske-digest-row" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">
-            <span class="ske-digest-tag">YouTube</span>
-            <strong>${escapeHtml(item.title)}</strong><span>›</span>
-          </a>`).join('')
-        : empty(data.sourceStatus?.youtube === false
-          ? 'SKE48公式YouTubeを一時的に取得できませんでした。'
-          : 'この日付に公開された公式YouTube動画は見つかりませんでした。');
-
-    } catch (error) {
-      console.error(error);
-      summaryEl.innerHTML = '<div class="posts-error">昨日のSKE48を読み込めませんでした。</div>';
-      scheduleEl.innerHTML = '';
-      newsEl.innerHTML = '';
-      blogsEl.innerHTML = '';
-      externalNewsEl.innerHTML = '';
-      youtubeEl.innerHTML = '';
-    }
-  }
-
-  init();
+  document.title = `SKE48 日別まとめ | ${cfg.siteName || 'めがねまるのブログ'}`;
+  const dateEl=document.getElementById('digestDate'), summaryEl=document.getElementById('digestSummary'),
+    scheduleEl=document.getElementById('digestSchedule'), newsEl=document.getElementById('digestNews'),
+    blogsEl=document.getElementById('digestBlogs'), externalNewsEl=document.getElementById('digestExternalNews'),
+    youtubeEl=document.getElementById('digestYoutube');
+  const esc=v=>String(v||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
+  const kindClass=c=>({'公演':'stage','リリース':'release','イベント':'event','握手会':'meeting','メディア':'media','誕生日':'birthday','その他':'other'})[c]||'other';
+  const empty=t=>`<div class="ske-digest-empty">${esc(t)}</div>`;
+  const paras=s=>((String(s||'').trim().match(/[^。！？]+[。！？]?/g)||[]).map(x=>`<p>${esc(x.trim())}</p>`).join(''));
+  async function init(){
+    try{
+      const wanted=new URLSearchParams(location.search).get('date');
+      const endpoint=wanted?`/api/ske48/archive/day?date=${encodeURIComponent(wanted)}`:'/api/ske48/yesterday';
+      const r=await fetch(endpoint,{cache:'no-store'}), d=await r.json();
+      if(!r.ok||!d.ok) throw new Error(d.error||'digest failed');
+      dateEl.textContent=`${d.year}年${d.month}月${d.day}日（${d.weekday}）`;
+      summaryEl.innerHTML=`<span class="ske-digest-summary-label">DAILY SUMMARY</span><div class="ske-digest-summary-text">${paras(d.summary)}</div><div class="ske-yesterday-stats"><span><b>${d.counts.schedule}</b> 予定</span><span><b>${d.counts.news}</b> 公式ニュース</span><span><b>${d.counts.blogs}</b> メンバーブログ</span><span><b>${d.counts.externalNews}</b> 外部ニュース</span><span><b>${d.counts.youtube}</b> YouTube</span></div>`;
+      scheduleEl.innerHTML=d.scheduleItems.length?d.scheduleItems.map(i=>`<a class="ske-digest-row" href="${esc(i.url||d.sources.schedule)}" target="_blank" rel="noopener noreferrer"><span class="ske-schedule-kind ${kindClass(i.category)}">${esc(i.category)}</span><strong>${esc(i.title)}</strong><span>›</span></a>`).join(''):empty('公式スケジュール上の項目は見つかりませんでした。');
+      newsEl.innerHTML=d.newsItems.length?d.newsItems.map(i=>`<a class="ske-digest-row" href="${esc(i.url)}" target="_blank" rel="noopener noreferrer"><span class="ske-digest-tag">${esc(i.category)}</span><strong>${esc(i.title)}</strong><span>›</span></a>`).join(''):empty('この日付の公式ニュースは見つかりませんでした。');
+      blogsEl.innerHTML=d.blogItems.length?d.blogItems.map(i=>`<a class="ske-digest-row" href="${esc(i.url)}" target="_blank" rel="noopener noreferrer"><span class="ske-digest-tag member">${esc(i.member)}</span><strong>${esc(i.title)}</strong><span>›</span></a>`).join(''):empty('この日付のメンバーブログは見つかりませんでした。');
+      externalNewsEl.innerHTML=d.externalNewsItems.length?d.externalNewsItems.map(i=>`<a class="ske-digest-row" href="${esc(i.url)}" target="_blank" rel="noopener noreferrer"><span class="ske-digest-tag">${esc(i.source)}</span><strong>${esc(i.title)}</strong><span>›</span></a>`).join(''):empty('この日付の外部ニュースは見つかりませんでした。');
+      youtubeEl.innerHTML=d.youtubeItems.length?d.youtubeItems.map(i=>`<a class="ske-digest-row" href="${esc(i.url)}" target="_blank" rel="noopener noreferrer"><span class="ske-digest-tag">YouTube</span><strong>${esc(i.title)}</strong><span>›</span></a>`).join(''):empty('この日付の公式YouTube動画は見つかりませんでした。');
+    }catch(e){console.error(e);summaryEl.innerHTML='<div class="posts-error">この日のSKE48まとめを読み込めませんでした。</div>';scheduleEl.innerHTML=newsEl.innerHTML=blogsEl.innerHTML=externalNewsEl.innerHTML=youtubeEl.innerHTML='';}
+  } init();
 })();
