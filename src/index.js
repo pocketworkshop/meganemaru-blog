@@ -1,3 +1,5 @@
+import { handleCms } from './cms/cms.js';
+
 const SCHEDULE_CATEGORIES = [
   "公演",
   "リリース",
@@ -14,6 +16,8 @@ const SKE48_PROFILE_URL = "https://ske48.co.jp/feature/profile";
 
 export default {
   async fetch(request, env, ctx) {
+    const cmsResponse = await handleCms(request, env);
+    if (cmsResponse) return cmsResponse;
     const url = new URL(request.url);
 
     if (url.pathname === "/api/ske48/today") {

@@ -1,0 +1,24 @@
+<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CMS KV設定ファイル作成</title><style>body{font-family:system-ui,sans-serif;max-width:640px;margin:24px auto;padding:16px;background:#fff7fa;color:#302735}label{display:block;margin:24px 0}input,button{box-sizing:border-box;width:100%;padding:14px;font:inherit;border-radius:8px;border:1px solid #bbb}button{background:#ffd6e7}p{line-height:1.7;overflow-wrap:anywhere}</style><h1>KV設定ファイルを作成</h1><p>Cloudflareで作成した実際のNamespace IDを貼り付けてください。通信・ログイン・支払い登録はありません。IDは秘密鍵ではありません。</p><label>Namespace ID（32文字の16進数）<input id="namespace" autocomplete="off" spellcheck="false" placeholder="CloudflareのNamespace IDを貼り付け"></label><label>任意：現在のwrangler.jsonc（独自設定がある場合）<input id="current" type="file" accept=".json,.jsonc"></label><p>未選択なら前回CMSのDB・Cron・Static Assets設定を維持した設定を使います。保存後はGitHubのルートのwrangler.jsoncを上書きしてください。</p><button id="save">設定ファイルを保存</button><p id="message" role="status"></p><script>
+const original={"name": "meganemaru-blog", "main": "./src/index.js", "compatibility_date": "2026-09-28", "workers_dev": true, "assets": {"directory": "./public", "binding": "ASSETS", "run_worker_first": ["/api/*", "/admin", "/admin/*", "/media/cms/*", "/data/posts.json", "/blog/article", "/blog/article.html"]}, "d1_databases": [{"binding": "DB", "database_name": "meganemaru-blog-db", "database_id": "b574fbc9-2248-47b0-98cb-6c4cfb7265a0"}], "triggers": {"crons": ["0 22 * * *"]}, "kv_namespaces": [{"binding": "CMS_IMAGES"}]};
+// Strip JSONC comments with string awareness; never evaluate user-supplied code.
+function jsonc(text){
+ let out='',quoted=false,escaped=false,line=false,block=false;
+ for(let i=0;i<text.length;i++){
+  const c=text[i],n=text[i+1];
+  if(line){if(c==='\n'){line=false;out+=c;}continue;}
+  if(block){if(c==='*'&&n==='/'){block=false;i++;}continue;}
+  if(quoted){out+=c;if(escaped)escaped=false;else if(c==='\\')escaped=true;else if(c==='"')quoted=false;continue;}
+  if(c==='"'){quoted=true;out+=c;}else if(c==='/'&&n==='/'){line=true;i++;}else if(c==='/'&&n==='*'){block=true;i++;}else out+=c;
+ }
+ let clean='';quoted=false;escaped=false;
+ for(let i=0;i<out.length;i++){
+  const c=out[i];
+  if(quoted){clean+=c;if(escaped)escaped=false;else if(c==='\\')escaped=true;else if(c==='"')quoted=false;continue;}
+  if(c==='"'){quoted=true;clean+=c;continue;}
+  if(c===','){let j=i+1;while(/\s/.test(out[j]||'')&&j<out.length)j++;if(out[j]==='}'||out[j]===']')continue;}
+  clean+=c;
+ }
+ return JSON.parse(clean);
+}
+document.getElementById('save').onclick=async()=>{const msg=document.getElementById('message');try{const id=document.getElementById('namespace').value.trim();if(!/^[a-f0-9]{32}$/i.test(id))throw Error('CloudflareのNamespace ID（32文字の16進数）をそのまま貼り付けてください。名前やアカウントIDは使用しません。');const file=document.getElementById('current').files[0];let config=file?jsonc(await file.text()):structuredClone(original);if(config.name!=='meganemaru-blog'||config.main!=='./src/index.js')throw Error('対象のmeganemaru-blogのwrangler.jsoncを選んでください。');config.r2_buckets=(config.r2_buckets||[]).filter(x=>x.binding!=='CMS_IMAGES');if(!config.r2_buckets.length)delete config.r2_buckets;config.kv_namespaces=(config.kv_namespaces||[]).filter(x=>x.binding!=='CMS_IMAGES');config.kv_namespaces.push({binding:'CMS_IMAGES',id});const url=URL.createObjectURL(new Blob([JSON.stringify(config,null,2)+'\n'],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='wrangler.jsonc';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);msg.textContent='保存しました。端末が(1)などを付けた場合もGitHubではwrangler.jsoncという名前で上書きしてください。';}catch(e){msg.textContent=e.message;}};
+</script></html>

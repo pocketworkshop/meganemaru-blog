@@ -1,0 +1,48 @@
+{
+  "at": "2026-10-02T09:23:49.885Z",
+  "checks": [
+    "管理HTML・JS・読み取り・全変更API・プレビューの未認証拒否",
+    "偽造JWT・別ユーザー・別ホストの拒否",
+    "AUD不一致・期限切れJWT拒否",
+    "SQL実行前の既存記事表示",
+    "追加SQLが既存テーブル・データを保持",
+    "Origin・専用ヘッダーによるCSRF拒否",
+    "4件の安全な一回移行・本文等維持・slug/id旧URL維持",
+    "新規下書き保存・サーバーHTML無害化・下書き本文非公開",
+    "本人専用プレビュー・noindex・解析除外",
+    "公開・既存一覧用JSON反映・サーバーSEO・Analytics・共有維持",
+    "記事編集・保存済みslug固定・古いversion更新拒否",
+    "同時更新を原子的に拒否",
+    "公開停止・ゴミ箱・安全な下書き復元・完全削除",
+    "移行済み記事の完全削除後もposts.jsonから再出現しない",
+    "R2アップロード・MIME/シグネチャ/10MB検証・下書き画像非公開",
+    "本文途中画像・キャプション・複数記事参照・公開停止後画像アクセス拒否・R2保持",
+    "スマホ幅でHTML貼り付け：見出し・太字・斜体・リスト・番号・リンク・引用・改行",
+    "Markdownのみの貼り付け・フォント・サイズ・揃え操作",
+    "スマホ画面から端末画像選択・アップロード・本文挿入",
+    "スマホ下書き保存・プレビュー表示・横はみ出しなし",
+    "端末への未送信編集控え保存",
+    "未送信控えの編集画面への復元",
+    "PC表示・エディタ実行エラーなし",
+    "既存SKE48処理本文は完全一致・既存テーブル保持"
+  ],
+  "assetsRouting": {
+    "protected": [
+      "/admin",
+      "/admin/",
+      "/admin/index.html",
+      "/admin/admin.js",
+      "/api/admin/posts",
+      "/%61dmin/",
+      "/admin//index.html",
+      "/admin/index"
+    ],
+    "publicJsonInterception": true,
+    "articleTemplateRedirects": true
+  },
+  "wranglerDryRun": {
+    "version": "4.146.0",
+    "succeeded": true,
+    "deployed": false
+  }
+}

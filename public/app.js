@@ -2,7 +2,7 @@
   const cfg = window.SITE_CONFIG || {};
   const siteName = cfg.siteName || 'めがねまるのブログ';
   const tagline = cfg.tagline || '好きなことで、毎日をちょっと楽しく。';
-  document.title = siteName;
+  if (!document.getElementById('articleRoot')?.hasAttribute('data-server-rendered')) document.title = siteName;
   document.querySelectorAll('.js-site-name').forEach(el => el.textContent = siteName);
   document.querySelectorAll('.js-tagline').forEach(el => el.textContent = tagline);
 

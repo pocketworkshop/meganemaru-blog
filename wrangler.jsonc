@@ -6,7 +6,15 @@
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": [
+      "/api/*",
+      "/admin",
+      "/admin/*",
+      "/media/cms/*",
+      "/data/posts.json",
+      "/blog/article",
+      "/blog/article.html"
+    ]
   },
   "d1_databases": [
     {
@@ -16,6 +24,14 @@
     }
   ],
   "triggers": {
-    "crons": ["0 22 * * *"]
-  }
+    "crons": [
+      "0 22 * * *"
+    ]
+  },
+  "kv_namespaces": [
+    {
+      "binding": "CMS_IMAGES",
+      "id": "dbcd790eee76479587266d24dc6406f0"
+    }
+  ]
 }

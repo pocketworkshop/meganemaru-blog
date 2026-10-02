@@ -1,0 +1,21 @@
+{
+  "name": "meganemaru-blog-cms-assets",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild editor.js --bundle --format=esm --platform=browser --minify --outfile=../public/admin/admin.js && esbuild runtime-entry.js --bundle --format=esm --platform=browser --minify --outfile=../src/cms/runtime.mjs"
+  },
+  "dependencies": {
+    "@tiptap/core": "3.31.4",
+    "@tiptap/extension-image": "3.31.4",
+    "@tiptap/extension-table": "3.31.4",
+    "@tiptap/extension-text-align": "3.31.4",
+    "@tiptap/extension-text-style": "3.31.4",
+    "@tiptap/starter-kit": "3.31.4",
+    "dompurify": "3.4.16",
+    "esbuild": "0.28.2",
+    "jose": "6.2.12",
+    "marked": "18.0.14",
+    "sanitize-html": "2.18.0"
+  }
+}

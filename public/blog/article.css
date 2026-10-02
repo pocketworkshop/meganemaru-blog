@@ -30,3 +30,18 @@
     width: 100%;
   }
 }
+/* CMSから設定できる装飾と画像。既存デザインの範囲で追加します。 */
+.article-prose{overflow-wrap:anywhere;min-width:0}
+.article-prose h3{margin:1.8em 0 .6em;font-size:1.3rem}
+.article-prose h4{margin:1.6em 0 .6em;font-size:1.1rem}
+.article-prose ol{padding-left:1.5em;margin:0 0 1.5em}
+.article-prose a{color:#c23d68;text-decoration:underline;text-underline-offset:3px}
+.article-prose blockquote{margin:1.5em 0;padding:14px 20px;border-left:4px solid #ed90ac;background:#fff5f8}
+.article-prose figure{margin:24px 0}
+.article-prose figure img{display:inline-block;max-width:100%;height:auto}
+.article-prose figcaption{font-size:.8rem;color:#82747c;margin-top:8px}
+.article-prose pre{overflow:auto;max-width:100%;padding:16px;background:#f5f3f5;border-radius:10px}
+.article-prose table{width:100%;border-collapse:collapse;table-layout:fixed}
+.article-prose th,.article-prose td{border:1px solid #ddd3d9;padding:8px;overflow-wrap:anywhere}
+.article-prose [style*="font-family:serif"],.article-prose [style*="font-family: serif"]{font-family:"Yu Mincho","Hiragino Mincho ProN","Noto Serif CJK JP",serif!important}
+.article-prose [style*="font-family:sans-serif"],.article-prose [style*="font-family: sans-serif"]{font-family:"Yu Gothic","Hiragino Kaku Gothic ProN",Meiryo,sans-serif!important}

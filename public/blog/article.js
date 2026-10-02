@@ -1,6 +1,6 @@
 (() => {
   const root = document.getElementById('articleRoot');
-  if (!root) return;
+  if (!root || root.hasAttribute('data-server-rendered')) return;
 
   const categoryClass = (category) => ({
     'SKE48': 'ske',
