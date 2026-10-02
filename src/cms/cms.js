@@ -1,4 +1,4 @@
-import {authorize,verifyAdminPassword,makeSessionCookie,clearSessionCookie,loginPage,requireMutation,readJson,boundedBody,cleanHtml,escapeHtml as esc,fail,CmsError,secureResponse} from './security.js';
+import {authorize,checkLoginRateLimit,recordLoginFailure,clearLoginFailures,getSecurityAlert,acknowledgeSecurityAlert,verifyAdminPassword,makeSessionCookie,clearSessionCookie,loginPage,requireMutation,readJson,boundedBody,cleanHtml,escapeHtml as esc,fail,CmsError,secureResponse} from './security.js';
 const categories=['SKE48','競馬','ゲーム','便利ツール','雑記'];
 const now=()=>new Date().toISOString();
 const json=(value,status=200)=>new Response(JSON.stringify(value),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}});
@@ -158,8 +158,13 @@ export async function handleCms(request,env){
    if(request.method==='GET')return secureResponse(new Response(loginPage(),{headers:{'Content-Type':'text/html; charset=utf-8'}}),true);
    if(request.method==='POST'){
     const origin=request.headers.get('Origin');if(origin&&origin!==url.origin)fail(403,'別サイトからログインできません。');
+    await checkLoginRateLimit(request,env);
     const form=await request.formData();
-    if(!await verifyAdminPassword(env,form.get('password')))return secureResponse(new Response(loginPage('パスワードが違います。'),{status:401,headers:{'Content-Type':'text/html; charset=utf-8'}}),true);
+    if(!await verifyAdminPassword(env,form.get('password'))){
+     await recordLoginFailure(request,env);
+     return secureResponse(new Response(loginPage('認証情報が一致しません。不正なログイン試行は中止してください。認証失敗が規定回数に達した場合、この接続元からのログインを15分間制限します。'),{status:401,headers:{'Content-Type':'text/html; charset=utf-8'}}),true);
+    }
+    await clearLoginFailures(request,env);
     return secureResponse(new Response(null,{status:303,headers:{Location:'/admin/','Set-Cookie':await makeSessionCookie(env)}}),true);
    }
    fail(405,'Method Not Allowed');
@@ -179,7 +184,10 @@ export async function handleCms(request,env){
   else if(path.startsWith('/media/cms/'))response=await media(request,env,path.slice('/media/cms/'.length),false);
   else if(path==='/api/admin/session'&&request.method==='GET'){
    let schema=false;try{schema=!!await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='cms_posts'").first();}catch{}
-   response=json({email:'管理者',categories,schema,kv:!!env.CMS_IMAGES});
+   response=json({email:'管理者',categories,schema,kv:!!env.CMS_IMAGES,securityAlert:await getSecurityAlert(env)});
+  }
+  else if(path==='/api/admin/security-alert/ack'&&request.method==='POST'){
+   await acknowledgeSecurityAlert(env);response=json({ok:true});
   }
   else if(path==='/api/admin/posts'&&request.method==='GET')response=json({posts:(await env.DB.prepare('SELECT * FROM cms_posts ORDER BY updated_at DESC').all()).results.map(asPost)});
   else if(path==='/api/admin/posts'&&request.method==='POST')response=await save(request,env);
