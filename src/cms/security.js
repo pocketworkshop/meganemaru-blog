@@ -1,25 +1,19 @@
-import { createRemoteJWKSet, jwtVerify, sanitizeHtml } from './runtime.mjs';
-const keysets = new Map();
+import { sanitizeHtml } from './runtime.mjs';
 export class CmsError extends Error { constructor(status, message) { super(message); this.status = status; } }
 export function fail(status, message) { throw new CmsError(status, message); }
 export const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-export async function authorize(request, env) {
-  const domain = String(env.CMS_ACCESS_TEAM_DOMAIN || '').trim().replace(/\/$/,'');
-  const aud = String(env.CMS_ACCESS_AUD || '').trim();
-  const email = String(env.CMS_ADMIN_EMAIL || '').trim().toLowerCase();
-  const site = String(env.CMS_SITE_ORIGIN || '').trim().replace(/\/$/,'');
-  if (!/^https:\/\/[a-z0-9-]+\.cloudflareaccess\.com$/.test(domain) || !aud || !email || !/^https:\/\/[^/]+$/.test(site)) fail(503,'CMS認証設定が未完了です。導入手順を確認してください。');
-  if (new URL(request.url).origin !== site) fail(403,'このURLでは管理画面を利用できません。設定した本番URLを使用してください。');
-  const token = request.headers.get('Cf-Access-Jwt-Assertion');
-  if (!token) fail(401,'Cloudflare Accessの本人認証が必要です。管理画面を開き直してください。');
-  let payload;
-  try {
-    if (!keysets.has(domain)) keysets.set(domain, createRemoteJWKSet(new URL(`${domain}/cdn-cgi/access/certs`)));
-    ({payload} = await jwtVerify(token,keysets.get(domain), {issuer:domain,audience:aud,algorithms:['RS256'],requiredClaims:['exp','iat','sub','email']}));
-  } catch { fail(401,'認証が無効または期限切れです。管理画面を開き直してください。'); }
-  if (String(payload.email || '').toLowerCase() !== email) fail(403,'管理者本人のみ利用できます。');
-  return payload;
-}
+const SESSION_COOKIE = 'meganemaru_cms_session';
+const SESSION_SECONDS = 60 * 60 * 24 * 7;
+function bytesToHex(bytes){return [...new Uint8Array(bytes)].map(b=>b.toString(16).padStart(2,'0')).join('');}
+async function hmac(secret,value){const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);return bytesToHex(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(value)));}
+function constantEqual(a,b){a=String(a||'');b=String(b||'');if(a.length!==b.length)return false;let d=0;for(let i=0;i<a.length;i++)d|=a.charCodeAt(i)^b.charCodeAt(i);return d===0;}
+function passwordSecret(env){const secret=String(env.CMS_ADMIN_PASSWORD||'');if(secret.length<12)fail(503,'CMS管理者パスワードが未設定です。CloudflareのSecret「CMS_ADMIN_PASSWORD」に12文字以上で設定してください。');return secret;}
+function cookieValue(request,name){for(const part of (request.headers.get('Cookie')||'').split(';')){const [key,...rest]=part.trim().split('=');if(key===name)return rest.join('=');}return '';}
+export async function authorize(request,env){const secret=passwordSecret(env),token=cookieValue(request,SESSION_COOKIE),[expText,sig]=token.split('.'),exp=Number(expText);if(!Number.isInteger(exp)||exp*1000<Date.now()||!sig)fail(401,'管理者ログインが必要です。');const expected=await hmac(secret,`cms-session:${expText}`);if(!constantEqual(sig,expected))fail(401,'管理者ログインが必要です。');return {email:'管理者'};}
+export async function verifyAdminPassword(env,password){const secret=passwordSecret(env);const a=bytesToHex(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(secret)));const b=bytesToHex(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(String(password||''))));return constantEqual(a,b);}
+export async function makeSessionCookie(env){const secret=passwordSecret(env),exp=Math.floor(Date.now()/1000)+SESSION_SECONDS,sig=await hmac(secret,`cms-session:${exp}`);return `${SESSION_COOKIE}=${exp}.${sig}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${SESSION_SECONDS}`;}
+export function clearSessionCookie(){return `${SESSION_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`;}
+export function loginPage(message=''){const note=message?`<p class="error">${escapeHtml(message)}</p>`:'';return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>管理者ログイン | めがねまるのブログ</title><style>*{box-sizing:border-box}body{margin:0;background:#fff7fb;color:#2d2430;font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif}.wrap{min-height:100vh;display:grid;place-items:center;padding:24px}.card{width:min(100%,420px);background:#fff;border:1px solid #eadde5;border-radius:22px;padding:28px;box-shadow:0 12px 36px #5b304012}.logo{width:58px;height:58px;display:block;margin:0 auto 14px}h1{text-align:center;margin:0 0 8px;font-size:1.55rem}.sub{text-align:center;color:#786b74;margin:0 0 24px}label{display:block;font-weight:700;margin-bottom:8px}input{width:100%;font-size:16px;padding:14px;border:1px solid #cdbfc8;border-radius:12px}button{width:100%;margin-top:16px;padding:14px;border:0;border-radius:12px;background:#ff6f91;color:#fff;font-size:16px;font-weight:800}.error{background:#fff0f2;color:#9c263d;padding:10px 12px;border-radius:10px}.back{text-align:center;margin-top:18px}.back a{color:#6e5965}</style></head><body><main class="wrap"><section class="card"><img class="logo" src="/assets/bear-logo.png" alt=""><h1>管理者ログイン</h1><p class="sub">めがねまるのブログ CMS</p>${note}<form method="post" action="/admin/login"><label for="password">管理者パスワード</label><input id="password" name="password" type="password" autocomplete="current-password" required autofocus><button type="submit">ログイン</button></form><p class="back"><a href="/">ブログへ戻る</a></p></section></main></body></html>`;}
 export function requireMutation(request) {
   if (request.headers.get('Origin') !== new URL(request.url).origin || request.headers.get('X-CMS-Request') !== '1') fail(403,'操作元を確認できませんでした。管理画面から操作してください。');
   const mode=request.headers.get('Sec-Fetch-Site');

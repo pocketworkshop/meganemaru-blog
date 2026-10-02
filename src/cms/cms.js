@@ -1,4 +1,4 @@
-import {authorize,requireMutation,readJson,boundedBody,cleanHtml,escapeHtml as esc,fail,CmsError,secureResponse} from './security.js';
+import {authorize,verifyAdminPassword,makeSessionCookie,clearSessionCookie,loginPage,requireMutation,readJson,boundedBody,cleanHtml,escapeHtml as esc,fail,CmsError,secureResponse} from './security.js';
 const categories=['SKE48','競馬','ゲーム','便利ツール','雑記'];
 const now=()=>new Date().toISOString();
 const json=(value,status=200)=>new Response(JSON.stringify(value),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}});
@@ -154,14 +154,32 @@ export async function handleCms(request,env){
  const handled=admin||path==='/data/posts.json'||path.startsWith('/media/cms/')||['/blog/article','/blog/article.html'].includes(path);
  if(!handled)return null;
  try{
-  if(admin){await authorize(request,env);if(!['GET','HEAD'].includes(request.method))requireMutation(request);}
+  if(path==='/admin/login'){
+   if(request.method==='GET')return secureResponse(new Response(loginPage(),{headers:{'Content-Type':'text/html; charset=utf-8'}}),true);
+   if(request.method==='POST'){
+    const origin=request.headers.get('Origin');if(origin&&origin!==url.origin)fail(403,'別サイトからログインできません。');
+    const form=await request.formData();
+    if(!await verifyAdminPassword(env,form.get('password')))return secureResponse(new Response(loginPage('パスワードが違います。'),{status:401,headers:{'Content-Type':'text/html; charset=utf-8'}}),true);
+    return secureResponse(new Response(null,{status:303,headers:{Location:'/admin/','Set-Cookie':await makeSessionCookie(env)}}),true);
+   }
+   fail(405,'Method Not Allowed');
+  }
+  if(path==='/admin/logout'){
+   if(request.method!=='POST')fail(405,'Method Not Allowed');await authorize(request,env);
+   const origin=request.headers.get('Origin');if(origin&&origin!==url.origin)fail(403,'別サイトから操作できません。');
+   return secureResponse(new Response(null,{status:303,headers:{Location:'/admin/login','Set-Cookie':clearSessionCookie()}}),true);
+  }
+  if(admin){
+   try{await authorize(request,env);}catch(error){if(error instanceof CmsError&&error.status===401&&!path.startsWith('/api/'))return secureResponse(new Response(null,{status:303,headers:{Location:'/admin/login'}}),true);throw error;}
+   if(!['GET','HEAD'].includes(request.method))requireMutation(request);
+  }
   let response;
   if(path==='/data/posts.json'){if(!['GET','HEAD'].includes(request.method))fail(405,'Method Not Allowed');response=json(await publicPosts(request,env));if(request.method==='HEAD')response=new Response(null,{headers:response.headers});}
   else if(path.startsWith('/admin/media/cms/'))response=await media(request,env,path.slice('/admin/media/cms/'.length),true);
   else if(path.startsWith('/media/cms/'))response=await media(request,env,path.slice('/media/cms/'.length),false);
   else if(path==='/api/admin/session'&&request.method==='GET'){
    let schema=false;try{schema=!!await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='cms_posts'").first();}catch{}
-   response=json({email:env.CMS_ADMIN_EMAIL,categories,schema,kv:!!env.CMS_IMAGES});
+   response=json({email:'管理者',categories,schema,kv:!!env.CMS_IMAGES});
   }
   else if(path==='/api/admin/posts'&&request.method==='GET')response=json({posts:(await env.DB.prepare('SELECT * FROM cms_posts ORDER BY updated_at DESC').all()).results.map(asPost)});
   else if(path==='/api/admin/posts'&&request.method==='POST')response=await save(request,env);
