@@ -6,6 +6,28 @@
   document.querySelectorAll('.js-site-name').forEach(el => el.textContent = siteName);
   document.querySelectorAll('.js-tagline').forEach(el => el.textContent = tagline);
 
+  // Latest-post cards: styles.css の後段にある .article-card-link{display:block}
+  // がスマホ用の横並び指定を上書きするため、トップページだけ意図した配置へ戻す。
+  const latestCardFix = document.createElement('style');
+  latestCardFix.textContent = `
+    @media (max-width:800px){
+      #latestPosts .article-card.article-card-link{
+        display:grid;
+        grid-template-columns:125px minmax(0,1fr);
+      }
+      #latestPosts .article-card .thumb{
+        height:100%;
+        min-height:125px;
+      }
+    }
+    @media (max-width:450px){
+      #latestPosts .article-card.article-card-link{
+        grid-template-columns:105px minmax(0,1fr);
+      }
+    }
+  `;
+  document.head.appendChild(latestCardFix);
+
   const button = document.getElementById('menuButton');
   const nav = document.getElementById('mainNav');
   button?.addEventListener('click', () => {
