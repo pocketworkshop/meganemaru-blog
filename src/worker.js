@@ -1,10 +1,13 @@
 import app from './index.js';
+import { handleHandshake, refreshHandshakeSchedules } from './handshake/schedule.mjs';
 
 const TYPE = 'ske48_yesterday';
 const TODAY_CACHE_SECONDS = 6 * 60 * 60;
 
 export default {
   async fetch(request, env, ctx) {
+    const handshakeResponse = await handleHandshake(request, env, ctx);
+    if (handshakeResponse) return handshakeResponse;
     const url = new URL(request.url);
 
     if (url.pathname === '/api/ske48/today') {
@@ -22,6 +25,7 @@ export default {
 
   async scheduled(controller, env, ctx) {
     ctx.waitUntil(saveYesterday(env, ctx));
+    ctx.waitUntil(refreshHandshakeSchedules(env));
   },
 };
 
