@@ -1,5 +1,5 @@
 import {authorize,checkLoginRateLimit,recordLoginFailure,clearLoginFailures,getSecurityAlert,acknowledgeSecurityAlert,verifyAdminPassword,makeSessionCookie,clearSessionCookie,loginPage,requireMutation,readJson,boundedBody,cleanHtml,escapeHtml as esc,fail,CmsError,secureResponse} from './security.js';
-const categories=['SKE48','競馬','ゲーム','便利ツール','雑記'];
+const categories=['SKE48','競馬','株','ゲーム','便利ツール','雑記'];
 const now=()=>new Date().toISOString();
 const json=(value,status=200)=>new Response(JSON.stringify(value),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}});
 const stmt=(env,sql,...args)=>env.DB.prepare(sql).bind(...args);
@@ -128,7 +128,7 @@ async function media(request,env,key,admin){
 }
 function articleMarkup(post,preview=false,origin=''){
  const share=new URL('https://x.com/intent/tweet');share.searchParams.set('text',post.title);share.searchParams.set('url',`${origin}/blog/article.html?slug=${encodeURIComponent(post.slug||post.id)}`);
- const theme=({'SKE48':'ske','競馬':'keiba','ゲーム':'game','便利ツール':'tool','雑記':'note'})[post.category]||'note';
+ const theme=({'SKE48':'ske','競馬':'keiba','株':'stock','ゲーム':'game','便利ツール':'tool','雑記':'note'})[post.category]||'note';
  const body=preview?cleanHtml(post.bodyHtml).replaceAll('/media/cms/','/admin/media/cms/'):cleanHtml(post.bodyHtml);
  return `<article><header class="article-header"><a class="back-link" href="${preview?'/admin/':'/blog/'}">‹ ${preview?'管理画面':'記事一覧'}へ戻る</a><div class="article-meta"><span class="chip chip-${theme}">${esc(post.category)}</span><time>${esc(post.date.replaceAll('-','.'))}</time></div><h1>${esc(post.title)}</h1><p class="article-lead">${esc(post.summary)}</p>${preview?'':`<div class="article-share"><a class="article-share-x" href="${esc(share.href)}" target="_blank" rel="noopener noreferrer">Xで共有</a></div>`}</header><div class="article-prose">${body}</div></article>`;
 }
