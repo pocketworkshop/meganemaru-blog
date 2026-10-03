@@ -39,11 +39,10 @@ async function cachedToday(request, env, ctx) {
   const p = Object.fromEntries(parts.map(x => [x.type, x.value]));
   const dateKey = `${p.year}-${p.month}-${p.day}`;
 
-  // 日付ごとの外側キャッシュ。閲覧者が増えても、通常は6時間に1回だけ
-  // 既存の /api/ske48/today 処理まで到達する。
+  // 日付ごとの外側キャッシュ。v=2 で旧キャッシュを無効化。
   const origin = new URL(request.url).origin;
   const cacheKey = new Request(
-    `${origin}/api/ske48/today-cache?date=${encodeURIComponent(dateKey)}&v=1`,
+    `${origin}/api/ske48/today-cache?date=${encodeURIComponent(dateKey)}&v=2`,
     { method: 'GET' }
   );
   const cache = caches.default;
@@ -53,10 +52,117 @@ async function cachedToday(request, env, ctx) {
   const response = await app.fetch(request, env, ctx);
   if (!response.ok) return response;
 
-  const stored = new Response(response.body, response);
+  // src/index.js が返す予定一覧に、公式スケジュール詳細URLを補完する。
+  // 公式サイトへの追加アクセスも外側6時間キャッシュの更新時だけ。
+  const enriched = await enrichTodayScheduleUrls(response);
+  const stored = new Response(enriched.body, enriched);
   stored.headers.set('Cache-Control', `public, max-age=${TODAY_CACHE_SECONDS}`);
   ctx.waitUntil(cache.put(cacheKey, stored.clone()));
   return stored;
+}
+
+async function enrichTodayScheduleUrls(response) {
+  try {
+    const payload = await response.clone().json();
+    if (!payload?.ok || !Array.isArray(payload.items) || !payload.items.length || !payload.sourceUrl) {
+      return response;
+    }
+
+    const official = await fetch(payload.sourceUrl, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Linux; Android 16) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml',
+        'Accept-Language': 'ja-JP,ja;q=0.9,en;q=0.8',
+      },
+    });
+    if (!official.ok) return response;
+
+    const html = await official.text();
+    const links = extractScheduleDetailLinks(html, payload.sourceUrl);
+    if (!links.length) return response;
+
+    payload.items = payload.items.map(item => {
+      const title = normalizeForMatch(item.title);
+      if (!title) return item;
+
+      const match = links.find(link => {
+        const text = normalizeForMatch(link.text);
+        return text === title || text.includes(title) || title.includes(text);
+      });
+
+      return match ? { ...item, url: match.url } : item;
+    });
+
+    payload.linkParserVersion = 1;
+
+    const headers = new Headers(response.headers);
+    return new Response(JSON.stringify(payload, null, 2), {
+      status: response.status,
+      headers,
+    });
+  } catch (error) {
+    console.error('SKE48 schedule detail URL enrichment failed:', error);
+    return response;
+  }
+}
+
+function extractScheduleDetailLinks(html, baseUrl) {
+  const links = [];
+  const pattern = /<a\b[^>]*href\s*=\s*(["'])(.*?)\1[^>]*>([\s\S]*?)<\/a>/gi;
+  let match;
+
+  while ((match = pattern.exec(String(html))) !== null) {
+    try {
+      const url = new URL(decodeHtml(match[2]), baseUrl);
+      if (url.origin !== 'https://ske48.co.jp') continue;
+      if (!/^\/schedule\/detail\/\d+\/?$/.test(url.pathname)) continue;
+
+      const text = htmlToText(match[3]);
+      if (!text) continue;
+
+      links.push({
+        text,
+        url: `${url.origin}${url.pathname.replace(/\/$/, '')}`,
+      });
+    } catch {
+      // 不正なURLは無視。
+    }
+  }
+
+  return links;
+}
+
+function htmlToText(value) {
+  return normalizeSpace(
+    decodeHtml(
+      String(value)
+        .replace(/<script\b[\s\S]*?<\/script>/gi, ' ')
+        .replace(/<style\b[\s\S]*?<\/style>/gi, ' ')
+        .replace(/<[^>]+>/g, ' ')
+    )
+  );
+}
+
+function normalizeForMatch(value) {
+  return normalizeSpace(value)
+    .replace(/[「」『』【】（）()[\]<>〈〉《》"'’“”!?！？・:：,，.。]/g, '')
+    .replace(/\s+/g, '')
+    .toLowerCase();
+}
+
+function normalizeSpace(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function decodeHtml(value) {
+  const named = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+  return String(value || '')
+    .replace(/&([a-zA-Z]+);/g, (all, name) => named[name] ?? all)
+    .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, code) =>
+      String.fromCodePoint(parseInt(code, 16))
+    );
 }
 
 async function saveYesterday(env, ctx) {
