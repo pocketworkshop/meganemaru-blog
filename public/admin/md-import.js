@@ -1,5 +1,5 @@
 (() => {
-  const allowedCategories = ['SKE48','競馬','ゲーム','便利ツール','雑記'];
+  const allowedCategories = ['SKE48','競馬','株','ゲーム','便利ツール','雑記'];
   const $ = id => document.getElementById(id);
 
   function parseFrontMatter(text) {
@@ -30,18 +30,14 @@
     const target=$('editor')?.querySelector('.tiptap') || $('editor');
     if (!target) throw new Error('本文エディターを開けませんでした。');
     target.focus();
-
-    // 新規記事なので本文全体を選択して置き換える。
     const sel=window.getSelection(), range=document.createRange();
     range.selectNodeContents(target);
     sel.removeAllRanges(); sel.addRange(range);
-
     const dt=new DataTransfer();
     dt.setData('text/plain', markdown);
     let ev;
-    try {
-      ev=new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:dt});
-    } catch {
+    try { ev=new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:dt}); }
+    catch {
       ev=new Event('paste',{bubbles:true,cancelable:true});
       Object.defineProperty(ev,'clipboardData',{value:dt});
     }
@@ -53,7 +49,6 @@
     if (file.size > 2 * 1024 * 1024) throw new Error('Markdownファイルが大きすぎます（上限2MiB）。');
     const text=await file.text();
     const {meta,body}=parseFrontMatter(text);
-
     if (!meta.title) throw new Error('title がありません。');
     if (meta.title.length > 200) throw new Error('title は200文字以内にしてください。');
     if (!meta.category) throw new Error('category がありません。');
@@ -63,19 +58,15 @@
     if (meta.date && !/^\d{4}-\d{2}-\d{2}$/.test(meta.date))
       throw new Error('date は YYYY-MM-DD 形式にしてください。');
 
-    // 一覧画面からなら新規記事画面を開く。
     if (!$('listView')?.hidden) {
       $('newPost')?.click();
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     }
-
     setField('title',meta.title);
     setField('category',meta.category);
     setField('date',meta.date || new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Tokyo'}).format(new Date()));
     setField('summary',meta.summary || '');
-    // slug はCMSの自動生成に任せる。
     setField('slug','');
-
     pasteMarkdown(body || '');
     const notice=$('notice');
     if (notice) {
@@ -88,16 +79,12 @@
   function install() {
     const newPost=$('newPost');
     if (!newPost || $('mdImportButton')) return;
-
     const input=document.createElement('input');
     input.type='file'; input.id='mdImportFile'; input.accept='.md,text/markdown,text/plain'; input.hidden=true;
-
     const button=document.createElement('button');
     button.type='button'; button.id='mdImportButton'; button.textContent='MDを読み込む';
-
     newPost.parentNode.insertBefore(button,newPost);
     newPost.parentNode.insertBefore(input,newPost);
-
     input.addEventListener('change', async () => {
       try { await importFile(input.files?.[0]); }
       catch(e) {
