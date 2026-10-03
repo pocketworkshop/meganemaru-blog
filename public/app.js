@@ -41,24 +41,25 @@
     if (button) button.textContent = '☰';
   }));
 
+  const stockCategoryStyle=document.createElement('style');
+  stockCategoryStyle.textContent='.thumb-stock{background:linear-gradient(135deg,#2f80ed,#1858b8)}.chip-stock{background:#e5f0ff;color:#1d62b7}.stock-bg{background:#e5f0ff;color:#1d62b7}';
+  document.head.appendChild(stockCategoryStyle);
+  
   const categoryClass = (category) => ({
     'SKE48': 'ske',
     '競馬': 'keiba',
+    '株': 'stock',
     'ゲーム': 'game',
     '便利ツール': 'tool',
     '雑記': 'note'
   })[category] || 'note';
 
   const formatDate = (date) => String(date || '').replaceAll('-', '.');
-
   const escapeHtml = (value) => String(value || '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
-
+    .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;').replaceAll("'", '&#039;');
   const postKey = (post) => post.slug || post.id || '';
+  const label = (theme) => theme === 'ske' ? 'DAILY LOG' : theme === 'keiba' ? 'RACE NOTE' : theme === 'stock' ? 'STOCK NOTE' : theme === 'game' ? 'PLAY LOG' : theme === 'tool' ? 'WEB TOOL' : 'BLOG NOTE';
 
   async function loadLatestPosts() {
     const grid = document.getElementById('latestPosts');
@@ -67,16 +68,13 @@
       const response = await fetch('/data/posts.json', { cache: 'no-store' });
       if (!response.ok) throw new Error('posts.json could not be loaded');
       const posts = await response.json();
-      const latest = [...posts]
-        .sort((a, b) => String(b.date).localeCompare(String(a.date)))
-        .slice(0, 3);
-
+      const latest = [...posts].sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,3);
       grid.innerHTML = latest.map(post => {
         const theme = categoryClass(post.category);
         const key = postKey(post);
         return `
           <a class="article-card article-card-link" href="/blog/article.html?slug=${encodeURIComponent(key)}">
-            <div class="thumb thumb-${theme}"><span>${escapeHtml(post.category)}</span><b>${theme === 'ske' ? 'DAILY LOG' : theme === 'tool' ? 'WEB TOOL' : 'BLOG NOTE'}</b></div>
+            <div class="thumb thumb-${theme}"><span>${escapeHtml(post.category)}</span><b>${label(theme)}</b></div>
             <div class="article-body">
               <span class="chip chip-${theme}">${escapeHtml(post.category)}</span>
               <time>${formatDate(post.date)}</time>
@@ -90,6 +88,5 @@
       console.error(error);
     }
   }
-
   loadLatestPosts();
 })();
