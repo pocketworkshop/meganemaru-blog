@@ -1,11 +1,15 @@
 import app from './index.js';
 
 const TYPE = 'ske48_yesterday';
+const TODAY_CACHE_SECONDS = 6 * 60 * 60;
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    if (url.pathname === '/api/ske48/today') {
+      return cachedToday(request, env, ctx);
+    }
     if (url.pathname === '/api/ske48/archive') {
       return archiveList(request, env);
     }
@@ -21,10 +25,39 @@ export default {
   },
 };
 
+async function cachedToday(request, env, ctx) {
+  if (request.method !== 'GET') return app.fetch(request, env, ctx);
+
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).formatToParts(now);
+  const p = Object.fromEntries(parts.map(x => [x.type, x.value]));
+  const dateKey = `${p.year}-${p.month}-${p.day}`;
+
+  // 日付ごとの外側キャッシュ。閲覧者が増えても、通常は6時間に1回だけ
+  // 既存の /api/ske48/today 処理まで到達する。
+  const origin = new URL(request.url).origin;
+  const cacheKey = new Request(
+    `${origin}/api/ske48/today-cache?date=${encodeURIComponent(dateKey)}&v=1`,
+    { method: 'GET' }
+  );
+  const cache = caches.default;
+  const cached = await cache.match(cacheKey);
+  if (cached) return cached;
+
+  const response = await app.fetch(request, env, ctx);
+  if (!response.ok) return response;
+
+  const stored = new Response(response.body, response);
+  stored.headers.set('Cache-Control', `public, max-age=${TODAY_CACHE_SECONDS}`);
+  ctx.waitUntil(cache.put(cacheKey, stored.clone()));
+  return stored;
+}
+
 async function saveYesterday(env, ctx) {
   if (!env.DB) throw new Error('D1 binding DB is not available.');
 
-  // 既存の「昨日のSKE48」生成処理をそのまま利用する。
   const request = new Request('https://meganemaru.internal/api/ske48/yesterday', {
     method: 'GET',
   });
