@@ -13,6 +13,9 @@ export default {
     if (url.pathname === '/api/ske48/today') {
       return cachedToday(request, env, ctx);
     }
+    if (url.pathname === '/api/ske48/today-news') {
+      return cachedTodayNews(request, ctx);
+    }
     if (url.pathname === '/api/ske48/archive') {
       return archiveList(request, env);
     }
@@ -163,6 +166,99 @@ function decodeHtml(value) {
     .replace(/&#x([0-9a-fA-F]+);/g, (_, code) =>
       String.fromCodePoint(parseInt(code, 16))
     );
+}
+
+
+async function cachedTodayNews(request, ctx) {
+  if (request.method !== 'GET') return json({ok:false,error:'Method Not Allowed'},405);
+
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).formatToParts(now);
+  const p = Object.fromEntries(parts.map(x => [x.type, x.value]));
+  const dateKey = `${p.year}-${p.month}-${p.day}`;
+  const dottedDate = `${p.year}.${p.month}.${p.day}`;
+
+  const origin = new URL(request.url).origin;
+  const cacheKey = new Request(
+    `${origin}/api/ske48/today-news-cache?date=${encodeURIComponent(dateKey)}&v=1`,
+    { method: 'GET' }
+  );
+  const cache = caches.default;
+  const cached = await cache.match(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const result = await fetchTodayOfficialNews(dottedDate);
+    const response = json({
+      ok: true,
+      date: dateKey,
+      items: result.items,
+      sourceUrl: result.sourceUrl,
+      fetchedAt: new Date().toISOString()
+    }, 200, {'Cache-Control': `public, max-age=${TODAY_CACHE_SECONDS}`});
+
+    ctx.waitUntil(cache.put(cacheKey, response.clone()));
+    return response;
+  } catch (error) {
+    console.error('SKE48 today news failed:', error);
+    return json({ok:false,error:'今日の公式ニュースを取得できませんでした。'},502);
+  }
+}
+
+async function fetchTodayOfficialNews(dottedDate) {
+  const sourceUrl = 'https://ske48.co.jp/news/29/';
+  const response = await fetch(sourceUrl, {
+    headers: {
+      'User-Agent':
+        'Mozilla/5.0 (Linux; Android 16) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36',
+      Accept: 'text/html,application/xhtml+xml',
+      'Accept-Language': 'ja-JP,ja;q=0.9,en;q=0.8',
+    },
+  });
+  if (!response.ok) throw new Error(`official news HTTP ${response.status}`);
+
+  const html = await response.text();
+  const items = [];
+  const liPattern = /<li\b[^>]*>([\s\S]*?)<\/li>/gi;
+  let li;
+
+  while ((li = liPattern.exec(html)) !== null) {
+    const block = li[1];
+    if (!block.includes(dottedDate)) continue;
+
+    const anchor = block.match(/<a\b[^>]*href\s*=\s*(["'])(.*?)\1[^>]*>([\s\S]*?)<\/a>/i);
+    if (!anchor) continue;
+
+    let url;
+    try { url = new URL(decodeHtml(anchor[2]), sourceUrl); }
+    catch { continue; }
+    if (url.origin !== 'https://ske48.co.jp' || !url.pathname.startsWith('/news/detail/')) continue;
+
+    const titleMatch = block.match(/<p\b[^>]*class\s*=\s*(["'])[^"']*\btit\b[^"']*\1[^>]*>([\s\S]*?)<\/p>/i);
+    const catMatch = block.match(/<[^>]*class\s*=\s*(["'])[^"']*\bcat\b[^"']*\1[^>]*>([\s\S]*?)<\/[^>]+>/i);
+
+    const title = htmlToText(titleMatch ? titleMatch[2] : anchor[3]);
+    const category = htmlToText(catMatch ? catMatch[2] : '') || '公式ニュース';
+    if (!title) continue;
+
+    items.push({
+      category,
+      title,
+      url: `${url.origin}${url.pathname}${url.search}`
+    });
+  }
+
+  const seen = new Set();
+  return {
+    sourceUrl,
+    items: items.filter(item => {
+      if (seen.has(item.url)) return false;
+      seen.add(item.url);
+      return true;
+    })
+  };
 }
 
 async function saveYesterday(env, ctx) {
