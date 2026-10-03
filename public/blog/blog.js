@@ -45,6 +45,13 @@
       const categoryOk = activeCategory === 'すべて' || post.category === activeCategory;
       const haystack = `${post.title} ${post.summary} ${post.category}`.toLowerCase();
       return categoryOk && (!term || haystack.includes(term));
+    }).sort((a,b) => {
+      if (activeCategory !== 'すべて') {
+        const aPinned = a.theme === '__category_pinned__' ? 1 : 0;
+        const bPinned = b.theme === '__category_pinned__' ? 1 : 0;
+        if (aPinned !== bPinned) return bPinned - aPinned;
+      }
+      return String(b.date).localeCompare(String(a.date));
     });
 
     if (!filtered.length) {
