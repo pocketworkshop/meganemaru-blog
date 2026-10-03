@@ -1,1 +1,30 @@
-
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ff6f91">
+<title>握手券管理｜めがねまるのブログ</title>
+<meta name="description" content="握手会・トーク会の申込計画から当日の使用済み管理まで。同じ部の人数と枚数を端末内でかんたん確認。">
+<link rel="icon" href="/assets/bear-logo.png"><link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<header class="site-header"><a class="brand" href="/"><img src="/assets/bear-logo.png" alt=""><strong>めがねまるのブログ</strong></a><a href="/#tools">ホームへ</a></header>
+<main>
+<section class="intro"><p class="eyebrow">EVENT PLANNER</p><h1>🎟 握手券管理</h1><p>同じ部に、詰め込みすぎていない？<br>申込前の計画から、当日の「使った」まで。</p></section>
+<div id="message" class="notice" role="status" hidden></div>
+<div id="storageError" class="error" role="alert" hidden><p>端末の保存データを読み込めません。元のデータを保持し、変更を止めています。</p><button id="rescue">元の保存データを書き出す</button><button id="resetStorage">このツールの保存データを初期化</button><p>有効なバックアップを下の「復元」から読み込むこともできます。</p></div>
+<section class="panel toolbar" aria-label="イベントと表示設定">
+<label class="event-label">管理するイベント<select id="eventSelect" aria-label="管理するイベント" disabled></select></label>
+<div class="toolbar-actions"><button id="settings" disabled>⚙ 日程・メンバー</button><button id="reload">↻ スケジュール再読込</button></div>
+<p id="sourceInfo" class="small">公開スケジュールを読み込み中…</p>
+</section>
+<nav id="tabs" class="tabs" aria-label="日程" hidden></nav>
+<section id="workspace" aria-label="管理表"><div class="panel empty">公開スケジュールを読み込み中…</div></section>
+<section class="panel backup-panel"><h2>バックアップ</h2><p>枚数・状態はこのブラウザだけに自動保存します。別の端末へ移す前やブラウザデータを消す前に、書き出してください。</p><div class="actions"><button id="export">↓ バックアップを書き出す</button><button id="import">↑ バックアップから復元</button><input id="importFile" type="file" accept="application/json,.json" hidden></div><p class="small">復元すると、このツールの全イベントの保存データを置き換えます。現在のデータは先に書き出してください。</p></section>
+<details class="panel help"><summary>使い方と注意点</summary><ol><li>「日程・メンバー」で、自分が行く日とメンバーを選びます。</li><li>日程タブを開き、参加枠の＋・−で枚数を計画します。</li><li>申込が終わったら「申込予定」をタップして「申込済み」へ。</li><li>当日は「当日」表示に切り替え、使い終わった枠にチェックします。</li></ol><p>「―」の部は参加枠がなく、入力できません。日程やメンバーを非表示にしても、枚数は残ります。集計には非表示の入力も含めます。</p><p>注意・混雑は人数と枚数の目安です。回れるかどうかを保証するものではありません。レーンの入場締切・参加条件・変更情報は公式ページで確認してください。</p><p>撮影会は「参加券枚数」を入力します。公開案内ではCD3枚につき1回参加です。CD枚数との取り違えに注意してください。</p><p>使用済みは枠全体のチェックです。一部だけ使用した枚数の管理はVer.1では対応していません。使用済みの枠の枚数を変えると、未使用の「申込済み」に戻ります。</p><p>購入操作・ログイン・個人の申込情報のサーバー送信は行いません。端末間の自動同期はありません。別タブで更新された場合は再読込してから編集してください。</p></details>
+</main>
+<footer>握手券管理 Ver.1 · <a href="/">めがねまるのブログ</a></footer>
+<div id="saved" class="toast" role="status" aria-live="polite"></div>
+<dialog id="setupDialog" aria-labelledby="setupTitle"><div class="dialog-head"><h2 id="setupTitle">はじめの設定</h2><button id="closeSetup" aria-label="設定を閉じる">×</button></div><p id="setupProgress" class="small"></p><div id="setupBody"></div><div id="setupError" class="error" role="alert" hidden></div><div class="dialog-actions"><button id="setupBack">戻る</button><button id="setupNext" class="primary">次へ</button></div></dialog>
+<script type="module" src="./app.js"></script>
+<!-- Cloudflare Web Analytics --><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"b0c42181e800477e98da10bda2f5b9ce"}'></script><!-- End Cloudflare Web Analytics -->
+</body></html>
