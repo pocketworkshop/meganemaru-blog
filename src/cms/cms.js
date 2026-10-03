@@ -159,12 +159,6 @@ export async function handleCms(request,env){
    if(request.method==='POST'){
     const fetchSite=request.headers.get('Sec-Fetch-Site');
     if(fetchSite&&fetchSite!=='same-origin'&&fetchSite!=='none')fail(403,'別サイトからログインできません。');
-    const origin=request.headers.get('Origin');
-    if(origin){
-      let source;
-      try{source=new URL(origin);}catch{fail(403,'ログイン元を確認できません。');}
-      if(source.protocol!==url.protocol||source.hostname!==url.hostname||source.port!==url.port)fail(403,'別サイトからログインできません。');
-    }
     await checkLoginRateLimit(request,env);
     const form=await request.formData();
     if(!await verifyAdminPassword(env,form.get('password'))){
