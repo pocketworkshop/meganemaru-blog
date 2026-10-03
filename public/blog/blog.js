@@ -4,15 +4,20 @@
   const search = document.getElementById('postSearch');
   if (!list || !filters || !search) return;
 
+  const stockCategoryStyle=document.createElement('style');
+  stockCategoryStyle.textContent='.thumb-stock{background:linear-gradient(135deg,#2f80ed,#1858b8)}.chip-stock{background:#e5f0ff;color:#1d62b7}.stock-bg{background:#e5f0ff;color:#1d62b7}';
+  document.head.appendChild(stockCategoryStyle);
+  
   const categoryClass = (category) => ({
     'SKE48': 'ske',
     '競馬': 'keiba',
+    '株': 'stock',
     'ゲーム': 'game',
     '便利ツール': 'tool',
     '雑記': 'note'
   })[category] || 'note';
 
-  const label = (theme) => theme === 'ske' ? 'DAILY LOG' : theme === 'keiba' ? 'RACE NOTE' : theme === 'game' ? 'PLAY LOG' : theme === 'tool' ? 'WEB TOOL' : 'BLOG NOTE';
+  const label = (theme) => theme === 'ske' ? 'DAILY LOG' : theme === 'keiba' ? 'RACE NOTE' : theme === 'stock' ? 'STOCK NOTE' : theme === 'game' ? 'PLAY LOG' : theme === 'tool' ? 'WEB TOOL' : 'BLOG NOTE';
   const escapeHtml = (value) => String(value || '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
   const formatDate = (value) => String(value || '').replaceAll('-', '.');
   const postKey = (post) => post.slug || post.id || '';
@@ -73,6 +78,5 @@
       console.error(error);
     }
   }
-
   init();
 })();
