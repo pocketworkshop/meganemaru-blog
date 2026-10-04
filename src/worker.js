@@ -81,6 +81,7 @@ async function sitemapXml(request, env) {
     `${origin}/ske48/`,
     `${origin}/tools/conversation-report/`,
     `${origin}/tools/handshake-manager/`,
+    `${origin}/tools/umamikuji/`,
   ];
 
   const posts = await publicPosts(request, env);

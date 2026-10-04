@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#ff6f91">
+  <title>うまみくじ｜今日の馬券おみくじ | めがねまるのブログ</title>
+  <meta name="description" content="競馬の前に数秒のお楽しみ。神社のおみくじと競馬、流れ星・虹・金の蹄鉄などの期待演出を組み合わせた無料のうまみくじ。今日の馬券運とラッキー馬番をチェック。">
+  <link rel="canonical" href="https://meganemaru-blog.pwtools.workers.dev/tools/umamikuji/">
+  <meta property="og:type" content="website"><meta property="og:site_name" content="めがねまるのブログ">
+  <meta property="og:title" content="うまみくじ｜今日の馬券おみくじ">
+  <meta property="og:description" content="虹が出た！ あの星は…！？ 競馬の前に数秒遊べる、今日の馬券おみくじ。">
+  <meta property="og:url" content="https://meganemaru-blog.pwtools.workers.dev/tools/umamikuji/">
+  <meta property="og:image" content="https://meganemaru-blog.pwtools.workers.dev/assets/mascot.png">
+  <meta name="twitter:card" content="summary"><meta name="twitter:title" content="うまみくじ｜今日の馬券おみくじ">
+  <meta name="twitter:description" content="流れ星・金の蹄鉄・虹・不吉な星。今日の馬券運を楽しくチェック。">
+  <meta name="twitter:image" content="https://meganemaru-blog.pwtools.workers.dev/assets/mascot.png">
+  <link rel="icon" href="/assets/bear-logo.png"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="./style.css">
+</head>
+<body data-preserve-title>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="ホーム"><img class="brand-logo" src="/assets/bear-logo.png" alt="" aria-hidden="true"><span><strong class="js-site-name">めがねまるのブログ</strong><small class="js-tagline">好きなことで、毎日をちょっと楽しく。</small></span></a>
+    <button class="menu-button" id="menuButton" aria-label="メニューを開く" aria-expanded="false">☰</button>
+    <nav class="main-nav" id="mainNav" aria-label="メインメニュー"><a href="/">⌂ ホーム</a><a href="/blog/">▤ 最新記事</a><a href="/#categories">□ カテゴリー</a><a class="active" href="/#tools">🔧 便利ツール</a></nav>
+  </header>
+  <main class="um-page shell">
+    <nav class="um-breadcrumb" aria-label="パンくず"><a href="/">ホーム</a><span>›</span><a href="/blog/?category=競馬">競馬</a><span>›</span><span>うまみくじ</span></nav>
+    <section class="um-intro"><span class="section-kicker">競馬の前に、ちょっと運試し。</span><h1>うまみくじ<span>今日の馬券おみくじ</span></h1><p>今日のあなたの馬券運を占います<br>軸馬運・穴馬運・ラッキー馬番もチェック</p></section>
+    <section class="um-game panel" aria-label="今日の馬券おみくじ">
+      <div class="um-controls"><span class="um-pill">🐴 馬券のお守り、ひと振り。</span><button class="um-sound" id="sound" type="button" aria-pressed="false">🔇 音声 OFF</button></div>
+      <div id="stage" class="um-stage" data-phase="idle" aria-hidden="true">
+        <svg class="um-landscape" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#e1f1e9"/><stop offset="1" stop-color="#fffaf0"/></linearGradient>
+            <linearGradient id="grass" x2="0" y2="1"><stop stop-color="#75b89a"/><stop offset="1" stop-color="#28815b"/></linearGradient>
+            <linearGradient id="wood" x2="1" y2="1"><stop stop-color="#c49a4b"/><stop offset="1" stop-color="#805a2a"/></linearGradient>
+          </defs>
+          <rect width="800" height="400" fill="url(#sky)"/><circle cx="655" cy="70" r="40" fill="#ffe9ad"/>
+          <g fill="#fff" opacity=".65"><path d="M50 95h165c9-15-8-31-29-22-3-30-57-35-66-7-23-13-60-5-70 29Z"/><path d="M530 131h172c15-21-15-35-38-22-14-29-55-31-67-6-29-18-58-4-67 28Z"/></g>
+          <path d="M0 221Q80 155 175 210T370 204T560 191T800 201V400H0Z" fill="#b8d3bc"/>
+          <path d="M0 252Q120 195 275 243T545 229T800 240V400H0Z" fill="#8eb99d"/>
+          <path d="M0 290Q340 227 800 288V400H0Z" fill="url(#grass)"/>
+          <path d="M-30 341Q400 241 835 319" fill="none" stroke="#e7e4c9" stroke-width="38"/>
+          <path d="M-30 341Q400 241 835 319" fill="none" stroke="#faf8eb" stroke-width="2" stroke-dasharray="14 12"/>
+          <g stroke="#fffbed" stroke-width="5" fill="none"><path d="M0 276Q400 201 800 276"/><path d="M0 292Q400 217 800 292"/><path d="M35 270v36m70-47v36m70-47v36m70-43v36m70-39v36m70-38v36m70-34v36m70-29v36m70-23v36m70-18v36m70-11v36"/></g>
+          <g fill="#37674e"><path d="M40 275V174h8v101Z"/><path d="M-12 190Q43 127 101 190Q50 238-12 190Z"/><path d="M744 266V154h9v112Z"/><path d="M690 178Q745 105 814 177Q762 223 690 178Z"/></g>
+          <g fill="#9e553d"><path d="M241 244V94h19v150Z"/><path d="M540 244V94h19v150Z"/><path d="M219 125h363v15H219Z"/><path d="M389 93h21v52h-21Z"/><path d="M208 73Q400 109 591 73v17Q400 126 208 90Z"/></g>
+          <path d="M253 143Q400 184 547 143" fill="none" stroke="#c4ac70" stroke-width="6"/>
+          <g fill="#fffaf0"><path d="m319 156-12 17 14 4-13 18 20-19-11-4 14-17Z"/><path d="m389 166-12 17 14 4-13 18 20-19-11-4 14-17Z"/><path d="m459 162-12 17 14 4-13 18 20-19-11-4 14-17Z"/></g>
+          <g fill="#d5e4b9" opacity=".8"><ellipse cx="134" cy="362" rx="22" ry="3"/><ellipse cx="626" cy="374" rx="30" ry="3"/><ellipse cx="716" cy="345" rx="24" ry="3"/></g>
+        </svg>
+        <div class="um-night"></div>
+        <div class="um-rainbow"><i></i></div>
+        <div class="um-shooting"><i></i><i></i><i></i></div>
+        <div class="um-star">✦</div><div class="um-sparks"><i>✦</i><i>✧</i><i>✦</i><i>✧</i><i>✦</i></div>
+        <svg class="um-horse" viewBox="0 0 170 110" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="m147 12 5-10 5 11 8 13-4 13-13-4-12 24-8 15 17 27-9 5-24-28-15 3-14 28-10-4 9-30-19-8-23 25-9-7 24-37-15-1-6 13-17 7-3-7 12-11 4-21 24-8 37 3 21-22 12-15 17-5Z"/></svg>
+        <svg class="um-horseshoe" viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg"><path d="M25 17C1 72 16 115 60 115s59-43 35-98L80 25c17 44 8 72-20 72s-37-28-20-72Z" fill="currentColor" stroke="#735529" stroke-width="2"/><g fill="#fff5cf"><circle cx="26" cy="49" r="3"/><circle cx="27" cy="76" r="3"/><circle cx="39" cy="97" r="3"/><circle cx="60" cy="106" r="3"/><circle cx="81" cy="97" r="3"/><circle cx="93" cy="76" r="3"/><circle cx="94" cy="49" r="3"/></g></svg>
+        <div class="um-box"><div class="um-box-cap"></div><span>馬券<br>御神籤</span><small>うまみくじ</small></div>
+        <div class="um-flash"></div>
+        <div class="um-reveal"><span>本日の運勢</span><strong id="revealLabel"></strong></div>
+        <div class="um-stage-caption" id="stageCaption">いい予感、ひと振り。</div>
+      </div>
+      <div id="effectStatus" class="um-live" role="status" aria-live="polite"></div>
+      <div id="startScreen" class="um-start"><p>何が出るかは、お楽しみ。</p><button id="draw" class="um-primary" type="button" disabled>おみくじを引く <span aria-hidden="true">→</span></button><small>※結果はお遊びです</small></div>
+      <div id="drawingScreen" class="um-drawing" hidden><p id="effectCaption">おみくじを振っています…</p><p id="effectLevel" class="um-effect-level"></p><button id="skip" class="um-secondary" type="button">SKIP <span>演出をスキップ</span></button></div>
+      <section id="resultScreen" class="um-result" aria-labelledby="resultTitle" hidden>
+        <div class="um-result-heading"><span>本日の運勢</span><h2 id="resultTitle" tabindex="-1"></h2><p id="resultNote"></p></div>
+        <h3>今日の馬券運</h3>
+        <dl class="um-ratings"><div><dt>勝負運</dt><dd id="battle"></dd></div><div><dt>軸馬運</dt><dd id="axis"></dd></div><div><dt>穴馬運</dt><dd id="outsider"></dd></div></dl>
+        <div class="um-lucky-grid"><div class="um-number"><h3>ラッキー馬番</h3><strong id="number"></strong><span>番</span><small>1〜18番からランダム</small></div><div class="um-lucky-other"><div><h3>ラッキーカラー</h3><p><span id="colorSwatch" class="um-swatch" aria-hidden="true"></span><strong id="color"></strong></p></div><div><h3>おすすめ馬券</h3><strong id="ticket"></strong><small id="ticketNote"></small></div></div></div>
+        <div class="um-message"><h3>今日のお告げ</h3><p id="message"></p></div>
+        <div class="um-result-actions"><button id="again" class="um-primary" type="button">もう一度引く <span aria-hidden="true">↻</span></button><button id="share" class="um-secondary" type="button">結果をシェア ↗</button></div>
+        <p id="shareStatus" class="um-share-status" role="status"></p>
+        <div id="shareFallback" class="um-share-fallback" hidden><label for="shareText">共有用テキスト（選択してコピーできます）</label><textarea id="shareText" rows="5" readonly></textarea></div>
+      </section>
+      <noscript><p class="um-noscript">おみくじを引くにはJavaScriptを有効にしてください。</p></noscript>
+    </section>
+    <div class="um-notice"><p>※うまみくじはお遊びです。競馬予想や的中を保証するものではありません。</p><p>ラッキー馬番の馬が出走していない場合もあります。「見」は馬券を買わずに観戦することです。</p></div>
+    <details class="um-help panel"><summary>うまみくじの楽しみ方</summary><p>ボタンを押すだけで、今日の運勢・馬券運・ラッキー馬番・お告げが出ます。何度でも引けます。</p><p>流れ星や金の蹄鉄、虹が出たら期待の合図。けれど、演出だけでは結果は決まりません。何も起きずに大吉、不吉な星から大吉…そんな逆転もあります。</p><p>音声は最初はOFFです。ONにしても小さめの自作効果音だけが鳴ります。演出はSKIPで飛ばせます。</p></details>
+    <a class="um-back" href="/blog/?category=競馬">← 競馬の記事を読む</a>
+  </main>
+  <footer class="site-footer"><div class="shell footer-inner"><div><strong class="js-site-name">めがねまるのブログ</strong><p>好きなものを、好きなペースで。</p></div><div><p>非公式の個人サイトです。各権利者・団体とは関係ありません。</p><div class="footer-links"><a href="/about/">このブログについて</a><a href="/privacy/">プライバシーポリシー</a><a href="/terms/">利用規約</a><a href="/contact/">お問い合わせ</a></div></div></div></footer>
+  <script src="/config.js"></script><script src="/app.js"></script><script type="module" src="./app.js"></script>
+  <!-- Cloudflare Web Analytics --><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"b0c42181e800477e98da10bda2f5b9ce"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>

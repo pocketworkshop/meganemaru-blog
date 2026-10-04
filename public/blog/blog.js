@@ -39,7 +39,14 @@
     }));
   }
 
+  function updateKeibaTool() {
+    const tool = document.getElementById('keibaTool');
+    if (tool) tool.hidden = activeCategory !== '競馬';
+  }
+  updateKeibaTool();
+
   function renderPosts() {
+    updateKeibaTool();
     const term = search.value.trim().toLowerCase();
     const filtered = posts.filter(post => {
       const categoryOk = activeCategory === 'すべて' || post.category === activeCategory;
