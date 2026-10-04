@@ -1,0 +1,1854 @@
+{
+  "schemaVersion": 1,
+  "availableYears": [
+    2026
+  ],
+  "verifiedAt": "2026-10-05",
+  "sources": [
+    "https://www.jra.go.jp/datafile/seiseki/replay/2026/jyusyo.html",
+    "https://www.jra.go.jp/news/202509/092201.html",
+    "https://www.jra.go.jp/news/202601/010502.html"
+  ],
+  "extendedMondays": [
+    "2026-01-05",
+    "2026-01-12",
+    "2026-09-21",
+    "2026-10-12",
+    "2026-11-23"
+  ],
+  "races": [
+    {
+      "date": "2026-01-04",
+      "holiday": false,
+      "name": "中山金杯",
+      "grade": "GⅢ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-001",
+      "aliases": [
+        "中山金杯"
+      ]
+    },
+    {
+      "date": "2026-01-04",
+      "holiday": false,
+      "name": "京都金杯",
+      "grade": "GⅢ",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-002",
+      "aliases": [
+        "京都金杯"
+      ]
+    },
+    {
+      "date": "2026-01-11",
+      "holiday": false,
+      "name": "フェアリーステークス",
+      "grade": "GⅢ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-003",
+      "aliases": [
+        "フェアリーS"
+      ]
+    },
+    {
+      "date": "2026-01-12",
+      "holiday": true,
+      "name": "シンザン記念",
+      "grade": "GⅢ",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-004",
+      "aliases": [
+        "シンザン記念",
+        "日刊スポーツ賞シンザン記念"
+      ]
+    },
+    {
+      "date": "2026-01-18",
+      "holiday": false,
+      "name": "京成杯",
+      "grade": "GⅢ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-005",
+      "aliases": [
+        "京成杯"
+      ]
+    },
+    {
+      "date": "2026-01-18",
+      "holiday": false,
+      "name": "日経新春杯",
+      "grade": "GⅡ",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 2400,
+      "id": "jra-2026-006",
+      "aliases": [
+        "日経新春杯"
+      ]
+    },
+    {
+      "date": "2026-01-24",
+      "holiday": false,
+      "name": "小倉牝馬ステークス",
+      "grade": "GⅢ",
+      "venue": "小倉",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-007",
+      "aliases": [
+        "小倉牝馬S"
+      ]
+    },
+    {
+      "date": "2026-01-25",
+      "holiday": false,
+      "name": "アメリカジョッキークラブカップ",
+      "grade": "GⅡ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 2200,
+      "id": "jra-2026-008",
+      "aliases": [
+        "アメリカJCC",
+        "AJCC"
+      ]
+    },
+    {
+      "date": "2026-01-25",
+      "holiday": false,
+      "name": "プロキオンステークス",
+      "grade": "GⅡ",
+      "venue": "京都",
+      "surface": "ダート",
+      "distance": 1800,
+      "id": "jra-2026-009",
+      "aliases": [
+        "プロキオンS"
+      ]
+    },
+    {
+      "date": "2026-02-01",
+      "holiday": false,
+      "name": "根岸ステークス",
+      "grade": "GⅢ",
+      "venue": "東京",
+      "surface": "ダート",
+      "distance": 1400,
+      "id": "jra-2026-010",
+      "aliases": [
+        "根岸S"
+      ]
+    },
+    {
+      "date": "2026-02-01",
+      "holiday": false,
+      "name": "シルクロードステークス",
+      "grade": "GⅢ",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 1200,
+      "id": "jra-2026-011",
+      "aliases": [
+        "シルクロードS"
+      ]
+    },
+    {
+      "date": "2026-02-10",
+      "holiday": false,
+      "name": "きさらぎ賞",
+      "grade": "GⅢ",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 1800,
+      "id": "jra-2026-012",
+      "aliases": [
+        "きさらぎ賞"
+      ]
+    },
+    {
+      "date": "2026-02-10",
+      "holiday": false,
+      "name": "東京新聞杯",
+      "grade": "GⅢ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-013",
+      "aliases": [
+        "東京新聞杯"
+      ]
+    },
+    {
+      "date": "2026-02-14",
+      "holiday": false,
+      "name": "クイーンカップ",
+      "grade": "GⅢ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-014",
+      "aliases": [
+        "クイーンC"
+      ]
+    },
+    {
+      "date": "2026-02-14",
+      "holiday": false,
+      "name": "小倉ジャンプステークス",
+      "grade": "J・GⅢ",
+      "venue": "小倉",
+      "surface": "障害",
+      "distance": 3390,
+      "id": "jra-2026-015",
+      "aliases": [
+        "小倉ジャンプS"
+      ]
+    },
+    {
+      "date": "2026-02-15",
+      "holiday": false,
+      "name": "共同通信杯",
+      "grade": "GⅢ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 1800,
+      "id": "jra-2026-016",
+      "aliases": [
+        "共同通信杯"
+      ]
+    },
+    {
+      "date": "2026-02-15",
+      "holiday": false,
+      "name": "京都記念",
+      "grade": "GⅡ",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 2200,
+      "id": "jra-2026-017",
+      "aliases": [
+        "京都記念"
+      ]
+    },
+    {
+      "date": "2026-02-21",
+      "holiday": false,
+      "name": "ダイヤモンドステークス",
+      "grade": "GⅢ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 3400,
+      "id": "jra-2026-018",
+      "aliases": [
+        "ダイヤモンドS"
+      ]
+    },
+    {
+      "date": "2026-02-21",
+      "holiday": false,
+      "name": "阪急杯",
+      "grade": "GⅢ",
+      "venue": "阪神",
+      "surface": "芝",
+      "distance": 1400,
+      "id": "jra-2026-019",
+      "aliases": [
+        "阪急杯"
+      ]
+    },
+    {
+      "date": "2026-02-22",
+      "holiday": false,
+      "name": "フェブラリーステークス",
+      "grade": "GⅠ",
+      "venue": "東京",
+      "surface": "ダート",
+      "distance": 1600,
+      "id": "jra-2026-020",
+      "aliases": [
+        "フェブラリーS"
+      ]
+    },
+    {
+      "date": "2026-02-22",
+      "holiday": false,
+      "name": "小倉大賞典",
+      "grade": "GⅢ",
+      "venue": "小倉",
+      "surface": "芝",
+      "distance": 1800,
+      "id": "jra-2026-021",
+      "aliases": [
+        "小倉大賞典"
+      ]
+    },
+    {
+      "date": "2026-02-28",
+      "holiday": false,
+      "name": "オーシャンステークス",
+      "grade": "GⅢ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 1200,
+      "id": "jra-2026-022",
+      "aliases": [
+        "オーシャンS"
+      ]
+    },
+    {
+      "date": "2026-03-01",
+      "holiday": false,
+      "name": "中山記念",
+      "grade": "GⅡ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 1800,
+      "id": "jra-2026-023",
+      "aliases": [
+        "中山記念"
+      ]
+    },
+    {
+      "date": "2026-03-01",
+      "holiday": false,
+      "name": "チューリップ賞",
+      "grade": "GⅡ",
+      "venue": "阪神",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-024",
+      "aliases": [
+        "チューリップ賞"
+      ]
+    },
+    {
+      "date": "2026-03-07",
+      "holiday": false,
+      "name": "中山牝馬ステークス",
+      "grade": "GⅢ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 1800,
+      "id": "jra-2026-025",
+      "aliases": [
+        "中山牝馬S"
+      ]
+    },
+    {
+      "date": "2026-03-07",
+      "holiday": false,
+      "name": "フィリーズレビュー",
+      "grade": "GⅡ",
+      "venue": "阪神",
+      "surface": "芝",
+      "distance": 1400,
+      "id": "jra-2026-026",
+      "aliases": [
+        "フィリーズレビュー"
+      ]
+    },
+    {
+      "date": "2026-03-08",
+      "holiday": false,
+      "name": "弥生賞ディープインパクト記念",
+      "grade": "GⅡ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-027",
+      "aliases": [
+        "弥生賞",
+        "報知杯弥生賞ディープインパクト記念"
+      ]
+    },
+    {
+      "date": "2026-03-14",
+      "holiday": false,
+      "name": "阪神スプリングジャンプ",
+      "grade": "J・GⅡ",
+      "venue": "阪神",
+      "surface": "障害",
+      "distance": 3900,
+      "id": "jra-2026-028",
+      "aliases": [
+        "阪神スプリングジャンプ"
+      ]
+    },
+    {
+      "date": "2026-03-15",
+      "holiday": false,
+      "name": "スプリングステークス",
+      "grade": "GⅡ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 1800,
+      "id": "jra-2026-029",
+      "aliases": [
+        "スプリングS"
+      ]
+    },
+    {
+      "date": "2026-03-15",
+      "holiday": false,
+      "name": "金鯱賞",
+      "grade": "GⅡ",
+      "venue": "中京",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-030",
+      "aliases": [
+        "金鯱賞"
+      ]
+    },
+    {
+      "date": "2026-03-21",
+      "holiday": false,
+      "name": "フラワーカップ",
+      "grade": "GⅢ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 1800,
+      "id": "jra-2026-031",
+      "aliases": [
+        "フラワーC"
+      ]
+    },
+    {
+      "date": "2026-03-21",
+      "holiday": false,
+      "name": "ファルコンステークス",
+      "grade": "GⅢ",
+      "venue": "中京",
+      "surface": "芝",
+      "distance": 1400,
+      "id": "jra-2026-032",
+      "aliases": [
+        "ファルコンS"
+      ]
+    },
+    {
+      "date": "2026-03-22",
+      "holiday": false,
+      "name": "阪神大賞典",
+      "grade": "GⅡ",
+      "venue": "阪神",
+      "surface": "芝",
+      "distance": 3000,
+      "id": "jra-2026-033",
+      "aliases": [
+        "阪神大賞典"
+      ]
+    },
+    {
+      "date": "2026-03-22",
+      "holiday": false,
+      "name": "愛知杯",
+      "grade": "GⅢ",
+      "venue": "中京",
+      "surface": "芝",
+      "distance": 1400,
+      "id": "jra-2026-034",
+      "aliases": [
+        "愛知杯"
+      ]
+    },
+    {
+      "date": "2026-03-28",
+      "holiday": false,
+      "name": "日経賞",
+      "grade": "GⅡ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 2500,
+      "id": "jra-2026-035",
+      "aliases": [
+        "日経賞"
+      ]
+    },
+    {
+      "date": "2026-03-28",
+      "holiday": false,
+      "name": "毎日杯",
+      "grade": "GⅢ",
+      "venue": "阪神",
+      "surface": "芝",
+      "distance": 1800,
+      "id": "jra-2026-036",
+      "aliases": [
+        "毎日杯"
+      ]
+    },
+    {
+      "date": "2026-03-29",
+      "holiday": false,
+      "name": "マーチステークス",
+      "grade": "GⅢ",
+      "venue": "中山",
+      "surface": "ダート",
+      "distance": 1800,
+      "id": "jra-2026-037",
+      "aliases": [
+        "マーチS"
+      ]
+    },
+    {
+      "date": "2026-03-29",
+      "holiday": false,
+      "name": "高松宮記念",
+      "grade": "GⅠ",
+      "venue": "中京",
+      "surface": "芝",
+      "distance": 1200,
+      "id": "jra-2026-038",
+      "aliases": [
+        "高松宮記念"
+      ]
+    },
+    {
+      "date": "2026-04-04",
+      "holiday": false,
+      "name": "ダービー卿チャレンジトロフィー",
+      "grade": "GⅢ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-039",
+      "aliases": [
+        "ダービー卿チャレンジT"
+      ]
+    },
+    {
+      "date": "2026-04-04",
+      "holiday": false,
+      "name": "チャーチルダウンズカップ",
+      "grade": "GⅢ",
+      "venue": "阪神",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-040",
+      "aliases": [
+        "チャーチルダウンズC"
+      ]
+    },
+    {
+      "date": "2026-04-05",
+      "holiday": false,
+      "name": "大阪杯",
+      "grade": "GⅠ",
+      "venue": "阪神",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-041",
+      "aliases": [
+        "大阪杯"
+      ]
+    },
+    {
+      "date": "2026-04-11",
+      "holiday": false,
+      "name": "ニュージーランドトロフィー",
+      "grade": "GⅡ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-042",
+      "aliases": [
+        "ニュージーランドT"
+      ]
+    },
+    {
+      "date": "2026-04-11",
+      "holiday": false,
+      "name": "阪神牝馬ステークス",
+      "grade": "GⅡ",
+      "venue": "阪神",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-043",
+      "aliases": [
+        "阪神牝馬S"
+      ]
+    },
+    {
+      "date": "2026-04-12",
+      "holiday": false,
+      "name": "桜花賞",
+      "grade": "GⅠ",
+      "venue": "阪神",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-044",
+      "aliases": [
+        "桜花賞"
+      ]
+    },
+    {
+      "date": "2026-04-18",
+      "holiday": false,
+      "name": "中山グランドジャンプ",
+      "grade": "J・GⅠ",
+      "venue": "中山",
+      "surface": "障害",
+      "distance": 4260,
+      "id": "jra-2026-045",
+      "aliases": [
+        "中山グランドジャンプ"
+      ]
+    },
+    {
+      "date": "2026-04-18",
+      "holiday": false,
+      "name": "アンタレスステークス",
+      "grade": "GⅢ",
+      "venue": "阪神",
+      "surface": "ダート",
+      "distance": 1800,
+      "id": "jra-2026-046",
+      "aliases": [
+        "アンタレスS"
+      ]
+    },
+    {
+      "date": "2026-04-19",
+      "holiday": false,
+      "name": "皐月賞",
+      "grade": "GⅠ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-047",
+      "aliases": [
+        "皐月賞"
+      ]
+    },
+    {
+      "date": "2026-04-19",
+      "holiday": false,
+      "name": "福島牝馬ステークス",
+      "grade": "GⅢ",
+      "venue": "福島",
+      "surface": "芝",
+      "distance": 1800,
+      "id": "jra-2026-048",
+      "aliases": [
+        "福島牝馬S"
+      ]
+    },
+    {
+      "date": "2026-04-25",
+      "holiday": false,
+      "name": "青葉賞",
+      "grade": "GⅡ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 2400,
+      "id": "jra-2026-049",
+      "aliases": [
+        "青葉賞"
+      ]
+    },
+    {
+      "date": "2026-04-26",
+      "holiday": false,
+      "name": "フローラステークス",
+      "grade": "GⅡ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-050",
+      "aliases": [
+        "フローラS"
+      ]
+    },
+    {
+      "date": "2026-04-26",
+      "holiday": false,
+      "name": "マイラーズカップ",
+      "grade": "GⅡ",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-051",
+      "aliases": [
+        "マイラーズC",
+        "読売マイラーズカップ"
+      ]
+    },
+    {
+      "date": "2026-05-02",
+      "holiday": false,
+      "name": "京王杯スプリングカップ",
+      "grade": "GⅡ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 1400,
+      "id": "jra-2026-052",
+      "aliases": [
+        "京王杯スプリングC"
+      ]
+    },
+    {
+      "date": "2026-05-02",
+      "holiday": false,
+      "name": "ユニコーンステークス",
+      "grade": "GⅢ",
+      "venue": "京都",
+      "surface": "ダート",
+      "distance": 1900,
+      "id": "jra-2026-053",
+      "aliases": [
+        "ユニコーンS"
+      ]
+    },
+    {
+      "date": "2026-05-03",
+      "holiday": true,
+      "name": "天皇賞（春）",
+      "grade": "GⅠ",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 3200,
+      "id": "jra-2026-054",
+      "aliases": [
+        "天皇賞（春）"
+      ]
+    },
+    {
+      "date": "2026-05-09",
+      "holiday": false,
+      "name": "エプソムカップ",
+      "grade": "GⅢ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 1800,
+      "id": "jra-2026-055",
+      "aliases": [
+        "エプソムC"
+      ]
+    },
+    {
+      "date": "2026-05-09",
+      "holiday": false,
+      "name": "京都新聞杯",
+      "grade": "GⅡ",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 2200,
+      "id": "jra-2026-056",
+      "aliases": [
+        "京都新聞杯"
+      ]
+    },
+    {
+      "date": "2026-05-10",
+      "holiday": false,
+      "name": "NHKマイルカップ",
+      "grade": "GⅠ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-057",
+      "aliases": [
+        "NHKマイルC"
+      ]
+    },
+    {
+      "date": "2026-05-16",
+      "holiday": false,
+      "name": "京都ハイジャンプ",
+      "grade": "J・GⅡ",
+      "venue": "京都",
+      "surface": "障害",
+      "distance": 3930,
+      "id": "jra-2026-058",
+      "aliases": [
+        "京都ハイジャンプ"
+      ]
+    },
+    {
+      "date": "2026-05-16",
+      "holiday": false,
+      "name": "新潟大賞典",
+      "grade": "GⅢ",
+      "venue": "新潟",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-059",
+      "aliases": [
+        "新潟大賞典"
+      ]
+    },
+    {
+      "date": "2026-05-17",
+      "holiday": false,
+      "name": "ヴィクトリアマイル",
+      "grade": "GⅠ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-060",
+      "aliases": [
+        "ヴィクトリアマイル"
+      ]
+    },
+    {
+      "date": "2026-05-23",
+      "holiday": false,
+      "name": "平安ステークス",
+      "grade": "GⅢ",
+      "venue": "京都",
+      "surface": "ダート",
+      "distance": 1900,
+      "id": "jra-2026-061",
+      "aliases": [
+        "平安S"
+      ]
+    },
+    {
+      "date": "2026-05-24",
+      "holiday": false,
+      "name": "オークス",
+      "grade": "GⅠ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 2400,
+      "id": "jra-2026-062",
+      "aliases": [
+        "オークス"
+      ]
+    },
+    {
+      "date": "2026-05-30",
+      "holiday": false,
+      "name": "葵ステークス",
+      "grade": "GⅢ",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 1200,
+      "id": "jra-2026-063",
+      "aliases": [
+        "葵S"
+      ]
+    },
+    {
+      "date": "2026-05-31",
+      "holiday": false,
+      "name": "東京優駿（日本ダービー）",
+      "grade": "GⅠ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 2400,
+      "id": "jra-2026-064",
+      "aliases": [
+        "日本ダービー",
+        "東京優駿"
+      ]
+    },
+    {
+      "date": "2026-05-31",
+      "holiday": false,
+      "name": "目黒記念",
+      "grade": "GⅡ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 2500,
+      "id": "jra-2026-065",
+      "aliases": [
+        "目黒記念"
+      ]
+    },
+    {
+      "date": "2026-06-07",
+      "holiday": false,
+      "name": "安田記念",
+      "grade": "GⅠ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-066",
+      "aliases": [
+        "安田記念"
+      ]
+    },
+    {
+      "date": "2026-06-13",
+      "holiday": false,
+      "name": "東京ジャンプステークス",
+      "grade": "J・GⅢ",
+      "venue": "東京",
+      "surface": "障害",
+      "distance": 3110,
+      "id": "jra-2026-067",
+      "aliases": [
+        "東京ジャンプS"
+      ]
+    },
+    {
+      "date": "2026-06-13",
+      "holiday": false,
+      "name": "函館スプリントステークス",
+      "grade": "GⅢ",
+      "venue": "函館",
+      "surface": "芝",
+      "distance": 1200,
+      "id": "jra-2026-068",
+      "aliases": [
+        "函館スプリントS"
+      ]
+    },
+    {
+      "date": "2026-06-14",
+      "holiday": false,
+      "name": "宝塚記念",
+      "grade": "GⅠ",
+      "venue": "阪神",
+      "surface": "芝",
+      "distance": 2200,
+      "id": "jra-2026-069",
+      "aliases": [
+        "宝塚記念"
+      ]
+    },
+    {
+      "date": "2026-06-21",
+      "holiday": false,
+      "name": "府中牝馬ステークス",
+      "grade": "GⅢ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 1800,
+      "id": "jra-2026-070",
+      "aliases": [
+        "府中牝馬S"
+      ]
+    },
+    {
+      "date": "2026-06-21",
+      "holiday": false,
+      "name": "しらさぎステークス",
+      "grade": "GⅢ",
+      "venue": "阪神",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-071",
+      "aliases": [
+        "しらさぎS"
+      ]
+    },
+    {
+      "date": "2026-06-28",
+      "holiday": false,
+      "name": "ラジオNIKKEI賞",
+      "grade": "GⅢ",
+      "venue": "福島",
+      "surface": "芝",
+      "distance": 1800,
+      "id": "jra-2026-072",
+      "aliases": [
+        "ラジオNIKKEI賞"
+      ]
+    },
+    {
+      "date": "2026-06-28",
+      "holiday": false,
+      "name": "函館記念",
+      "grade": "GⅢ",
+      "venue": "函館",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-073",
+      "aliases": [
+        "函館記念"
+      ]
+    },
+    {
+      "date": "2026-07-05",
+      "holiday": false,
+      "name": "北九州記念",
+      "grade": "GⅢ",
+      "venue": "小倉",
+      "surface": "芝",
+      "distance": 1200,
+      "id": "jra-2026-074",
+      "aliases": [
+        "北九州記念"
+      ]
+    },
+    {
+      "date": "2026-07-12",
+      "holiday": false,
+      "name": "七夕賞",
+      "grade": "GⅢ",
+      "venue": "福島",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-075",
+      "aliases": [
+        "七夕賞"
+      ]
+    },
+    {
+      "date": "2026-07-19",
+      "holiday": false,
+      "name": "小倉記念",
+      "grade": "GⅢ",
+      "venue": "小倉",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-076",
+      "aliases": [
+        "小倉記念"
+      ]
+    },
+    {
+      "date": "2026-07-19",
+      "holiday": false,
+      "name": "函館2歳ステークス",
+      "grade": "GⅢ",
+      "venue": "函館",
+      "surface": "芝",
+      "distance": 1200,
+      "id": "jra-2026-077",
+      "aliases": [
+        "函館2歳S"
+      ]
+    },
+    {
+      "date": "2026-07-26",
+      "holiday": false,
+      "name": "関屋記念",
+      "grade": "GⅢ",
+      "venue": "新潟",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-078",
+      "aliases": [
+        "関屋記念"
+      ]
+    },
+    {
+      "date": "2026-07-26",
+      "holiday": false,
+      "name": "東海ステークス",
+      "grade": "GⅢ",
+      "venue": "中京",
+      "surface": "ダート",
+      "distance": 1400,
+      "id": "jra-2026-079",
+      "aliases": [
+        "東海S"
+      ]
+    },
+    {
+      "date": "2026-08-02",
+      "holiday": false,
+      "name": "アイビスサマーダッシュ",
+      "grade": "GⅢ",
+      "venue": "新潟",
+      "surface": "芝",
+      "distance": 1000,
+      "id": "jra-2026-080",
+      "aliases": [
+        "アイビスサマーダッシュ"
+      ]
+    },
+    {
+      "date": "2026-08-02",
+      "holiday": false,
+      "name": "クイーンステークス",
+      "grade": "GⅢ",
+      "venue": "札幌",
+      "surface": "芝",
+      "distance": 1800,
+      "id": "jra-2026-081",
+      "aliases": [
+        "クイーンS"
+      ]
+    },
+    {
+      "date": "2026-08-08",
+      "holiday": false,
+      "name": "エルムステークス",
+      "grade": "GⅢ",
+      "venue": "札幌",
+      "surface": "ダート",
+      "distance": 1700,
+      "id": "jra-2026-082",
+      "aliases": [
+        "エルムS"
+      ]
+    },
+    {
+      "date": "2026-08-09",
+      "holiday": false,
+      "name": "レパードステークス",
+      "grade": "GⅢ",
+      "venue": "新潟",
+      "surface": "ダート",
+      "distance": 1800,
+      "id": "jra-2026-083",
+      "aliases": [
+        "レパードS"
+      ]
+    },
+    {
+      "date": "2026-08-09",
+      "holiday": false,
+      "name": "CBC賞",
+      "grade": "GⅢ",
+      "venue": "中京",
+      "surface": "芝",
+      "distance": 1200,
+      "id": "jra-2026-084",
+      "aliases": [
+        "CBC賞"
+      ]
+    },
+    {
+      "date": "2026-08-15",
+      "holiday": false,
+      "name": "新潟ジャンプステークス",
+      "grade": "J・GⅢ",
+      "venue": "新潟",
+      "surface": "障害",
+      "distance": 3250,
+      "id": "jra-2026-085",
+      "aliases": [
+        "新潟ジャンプS"
+      ]
+    },
+    {
+      "date": "2026-08-16",
+      "holiday": false,
+      "name": "中京記念",
+      "grade": "GⅢ",
+      "venue": "中京",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-086",
+      "aliases": [
+        "中京記念"
+      ]
+    },
+    {
+      "date": "2026-08-16",
+      "holiday": false,
+      "name": "札幌記念",
+      "grade": "GⅡ",
+      "venue": "札幌",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-087",
+      "aliases": [
+        "札幌記念"
+      ]
+    },
+    {
+      "date": "2026-08-23",
+      "holiday": false,
+      "name": "新潟2歳ステークス",
+      "grade": "GⅢ",
+      "venue": "新潟",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-088",
+      "aliases": [
+        "新潟2歳S"
+      ]
+    },
+    {
+      "date": "2026-08-23",
+      "holiday": false,
+      "name": "キーンランドカップ",
+      "grade": "GⅢ",
+      "venue": "札幌",
+      "surface": "芝",
+      "distance": 1200,
+      "id": "jra-2026-089",
+      "aliases": [
+        "キーンランドC"
+      ]
+    },
+    {
+      "date": "2026-08-30",
+      "holiday": false,
+      "name": "新潟記念",
+      "grade": "GⅢ",
+      "venue": "新潟",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-090",
+      "aliases": [
+        "新潟記念"
+      ]
+    },
+    {
+      "date": "2026-08-30",
+      "holiday": false,
+      "name": "中京2歳ステークス",
+      "grade": "GⅢ",
+      "venue": "中京",
+      "surface": "芝",
+      "distance": 1400,
+      "id": "jra-2026-091",
+      "aliases": [
+        "中京2歳S"
+      ]
+    },
+    {
+      "date": "2026-09-05",
+      "holiday": false,
+      "name": "京成杯オータムハンデキャップ",
+      "grade": "GⅢ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-092",
+      "aliases": [
+        "京成杯オータムH",
+        "京成杯AH"
+      ]
+    },
+    {
+      "date": "2026-09-05",
+      "holiday": false,
+      "name": "札幌2歳ステークス",
+      "grade": "GⅢ",
+      "venue": "札幌",
+      "surface": "芝",
+      "distance": 1800,
+      "id": "jra-2026-093",
+      "aliases": [
+        "札幌2歳S"
+      ]
+    },
+    {
+      "date": "2026-09-06",
+      "holiday": false,
+      "name": "紫苑ステークス",
+      "grade": "GⅡ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-094",
+      "aliases": [
+        "紫苑S"
+      ]
+    },
+    {
+      "date": "2026-09-06",
+      "holiday": false,
+      "name": "セントウルステークス",
+      "grade": "GⅡ",
+      "venue": "阪神",
+      "surface": "芝",
+      "distance": 1200,
+      "id": "jra-2026-095",
+      "aliases": [
+        "セントウルS"
+      ]
+    },
+    {
+      "date": "2026-09-12",
+      "holiday": false,
+      "name": "チャレンジカップ",
+      "grade": "GⅢ",
+      "venue": "阪神",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-096",
+      "aliases": [
+        "チャレンジC"
+      ]
+    },
+    {
+      "date": "2026-09-13",
+      "holiday": false,
+      "name": "セントライト記念",
+      "grade": "GⅡ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 2200,
+      "id": "jra-2026-097",
+      "aliases": [
+        "セントライト記念"
+      ]
+    },
+    {
+      "date": "2026-09-13",
+      "holiday": false,
+      "name": "ローズステークス",
+      "grade": "GⅡ",
+      "venue": "阪神",
+      "surface": "芝",
+      "distance": 1800,
+      "id": "jra-2026-098",
+      "aliases": [
+        "ローズS",
+        "関西テレビ放送賞ローズステークス"
+      ]
+    },
+    {
+      "date": "2026-09-19",
+      "holiday": false,
+      "name": "阪神ジャンプステークス",
+      "grade": "J・GⅢ",
+      "venue": "阪神",
+      "surface": "障害",
+      "distance": 3140,
+      "id": "jra-2026-099",
+      "aliases": [
+        "阪神ジャンプS"
+      ]
+    },
+    {
+      "date": "2026-09-20",
+      "holiday": false,
+      "name": "オールカマー",
+      "grade": "GⅡ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 2200,
+      "id": "jra-2026-100",
+      "aliases": [
+        "オールカマー"
+      ]
+    },
+    {
+      "date": "2026-09-21",
+      "holiday": true,
+      "name": "神戸新聞杯",
+      "grade": "GⅡ",
+      "venue": "阪神",
+      "surface": "芝",
+      "distance": 2400,
+      "id": "jra-2026-101",
+      "aliases": [
+        "神戸新聞杯"
+      ]
+    },
+    {
+      "date": "2026-09-26",
+      "holiday": false,
+      "name": "シリウスステークス",
+      "grade": "GⅢ",
+      "venue": "阪神",
+      "surface": "ダート",
+      "distance": 2000,
+      "id": "jra-2026-102",
+      "aliases": [
+        "シリウスS"
+      ]
+    },
+    {
+      "date": "2026-09-27",
+      "holiday": false,
+      "name": "スプリンターズステークス",
+      "grade": "GⅠ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 1200,
+      "id": "jra-2026-103",
+      "aliases": [
+        "スプリンターズS"
+      ]
+    },
+    {
+      "date": "2026-10-04",
+      "holiday": false,
+      "name": "毎日王冠",
+      "grade": "GⅡ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 1800,
+      "id": "jra-2026-104",
+      "aliases": [
+        "毎日王冠"
+      ]
+    },
+    {
+      "date": "2026-10-04",
+      "holiday": false,
+      "name": "京都大賞典",
+      "grade": "GⅡ",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 2400,
+      "id": "jra-2026-105",
+      "aliases": [
+        "京都大賞典"
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "holiday": false,
+      "name": "サウジアラビアロイヤルカップ",
+      "grade": "GⅢ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-106",
+      "aliases": [
+        "サウジアラビアロイヤルC"
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "holiday": false,
+      "name": "アイルランドトロフィー",
+      "grade": "GⅡ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 1800,
+      "id": "jra-2026-107",
+      "aliases": [
+        "アイルランドT"
+      ]
+    },
+    {
+      "date": "2026-10-12",
+      "holiday": true,
+      "name": "スワンステークス",
+      "grade": "GⅡ",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 1400,
+      "id": "jra-2026-108",
+      "aliases": [
+        "スワンS",
+        "MBS賞スワンステークス"
+      ]
+    },
+    {
+      "date": "2026-10-17",
+      "holiday": false,
+      "name": "富士ステークス",
+      "grade": "GⅡ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-109",
+      "aliases": [
+        "富士S"
+      ]
+    },
+    {
+      "date": "2026-10-18",
+      "holiday": false,
+      "name": "東京ハイジャンプ",
+      "grade": "J・GⅡ",
+      "venue": "東京",
+      "surface": "障害",
+      "distance": 3110,
+      "id": "jra-2026-110",
+      "aliases": [
+        "東京ハイジャンプ"
+      ]
+    },
+    {
+      "date": "2026-10-18",
+      "holiday": false,
+      "name": "秋華賞",
+      "grade": "GⅠ",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-111",
+      "aliases": [
+        "秋華賞"
+      ]
+    },
+    {
+      "date": "2026-10-24",
+      "holiday": false,
+      "name": "アルテミスステークス",
+      "grade": "GⅢ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-112",
+      "aliases": [
+        "アルテミスS"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "holiday": false,
+      "name": "菊花賞",
+      "grade": "GⅠ",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 3000,
+      "id": "jra-2026-113",
+      "aliases": [
+        "菊花賞"
+      ]
+    },
+    {
+      "date": "2026-10-31",
+      "holiday": false,
+      "name": "ファンタジーステークス",
+      "grade": "GⅢ",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 1400,
+      "id": "jra-2026-114",
+      "aliases": [
+        "ファンタジーS",
+        "KBS京都賞ファンタジーステークス"
+      ]
+    },
+    {
+      "date": "2026-11-01",
+      "holiday": false,
+      "name": "天皇賞（秋）",
+      "grade": "GⅠ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-115",
+      "aliases": [
+        "天皇賞（秋）"
+      ]
+    },
+    {
+      "date": "2026-11-07",
+      "holiday": false,
+      "name": "京王杯2歳ステークス",
+      "grade": "GⅡ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 1400,
+      "id": "jra-2026-116",
+      "aliases": [
+        "京王杯2歳S"
+      ]
+    },
+    {
+      "date": "2026-11-07",
+      "holiday": false,
+      "name": "京都ジャンプステークス",
+      "grade": "J・GⅢ",
+      "venue": "京都",
+      "surface": "障害",
+      "distance": 3170,
+      "id": "jra-2026-117",
+      "aliases": [
+        "京都ジャンプS"
+      ]
+    },
+    {
+      "date": "2026-11-08",
+      "holiday": false,
+      "name": "アルゼンチン共和国杯",
+      "grade": "GⅡ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 2500,
+      "id": "jra-2026-118",
+      "aliases": [
+        "アルゼンチン共和国杯"
+      ]
+    },
+    {
+      "date": "2026-11-08",
+      "holiday": false,
+      "name": "みやこステークス",
+      "grade": "GⅢ",
+      "venue": "京都",
+      "surface": "ダート",
+      "distance": 1800,
+      "id": "jra-2026-119",
+      "aliases": [
+        "みやこS"
+      ]
+    },
+    {
+      "date": "2026-11-14",
+      "holiday": false,
+      "name": "武蔵野ステークス",
+      "grade": "GⅢ",
+      "venue": "東京",
+      "surface": "ダート",
+      "distance": 1600,
+      "id": "jra-2026-120",
+      "aliases": [
+        "武蔵野S"
+      ]
+    },
+    {
+      "date": "2026-11-14",
+      "holiday": false,
+      "name": "デイリー杯2歳ステークス",
+      "grade": "GⅡ",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-121",
+      "aliases": [
+        "デイリー杯2歳S"
+      ]
+    },
+    {
+      "date": "2026-11-15",
+      "holiday": false,
+      "name": "エリザベス女王杯",
+      "grade": "GⅠ",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 2200,
+      "id": "jra-2026-122",
+      "aliases": [
+        "エリザベス女王杯"
+      ]
+    },
+    {
+      "date": "2026-11-21",
+      "holiday": false,
+      "name": "福島記念",
+      "grade": "GⅢ",
+      "venue": "福島",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-123",
+      "aliases": [
+        "福島記念"
+      ]
+    },
+    {
+      "date": "2026-11-22",
+      "holiday": false,
+      "name": "マイルチャンピオンシップ",
+      "grade": "GⅠ",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-124",
+      "aliases": [
+        "マイルチャンピオンシップ"
+      ]
+    },
+    {
+      "date": "2026-11-23",
+      "holiday": true,
+      "name": "東京スポーツ杯2歳ステークス",
+      "grade": "GⅡ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 1800,
+      "id": "jra-2026-125",
+      "aliases": [
+        "東スポ杯2歳S",
+        "東スポ杯2歳ステークス"
+      ]
+    },
+    {
+      "date": "2026-11-28",
+      "holiday": false,
+      "name": "京都2歳ステークス",
+      "grade": "GⅢ",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-126",
+      "aliases": [
+        "京都2歳S",
+        "ラジオNIKKEI杯京都2歳ステークス"
+      ]
+    },
+    {
+      "date": "2026-11-29",
+      "holiday": false,
+      "name": "ジャパンカップ",
+      "grade": "GⅠ",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 2400,
+      "id": "jra-2026-127",
+      "aliases": [
+        "ジャパンC"
+      ]
+    },
+    {
+      "date": "2026-11-29",
+      "holiday": false,
+      "name": "京阪杯",
+      "grade": "GⅢ",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 1200,
+      "id": "jra-2026-128",
+      "aliases": [
+        "京阪杯"
+      ]
+    },
+    {
+      "date": "2026-12-05",
+      "holiday": false,
+      "name": "ステイヤーズステークス",
+      "grade": "GⅡ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 3600,
+      "id": "jra-2026-129",
+      "aliases": [
+        "ステイヤーズS"
+      ]
+    },
+    {
+      "date": "2026-12-05",
+      "holiday": false,
+      "name": "鳴尾記念",
+      "grade": "GⅢ",
+      "venue": "阪神",
+      "surface": "芝",
+      "distance": 1800,
+      "id": "jra-2026-130",
+      "aliases": [
+        "鳴尾記念"
+      ]
+    },
+    {
+      "date": "2026-12-06",
+      "holiday": false,
+      "name": "チャンピオンズカップ",
+      "grade": "GⅠ",
+      "venue": "中京",
+      "surface": "ダート",
+      "distance": 1800,
+      "id": "jra-2026-131",
+      "aliases": [
+        "チャンピオンズC"
+      ]
+    },
+    {
+      "date": "2026-12-12",
+      "holiday": false,
+      "name": "中日新聞杯",
+      "grade": "GⅢ",
+      "venue": "中京",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-132",
+      "aliases": [
+        "中日新聞杯"
+      ]
+    },
+    {
+      "date": "2026-12-13",
+      "holiday": false,
+      "name": "カペラステークス",
+      "grade": "GⅢ",
+      "venue": "中山",
+      "surface": "ダート",
+      "distance": 1200,
+      "id": "jra-2026-133",
+      "aliases": [
+        "カペラS"
+      ]
+    },
+    {
+      "date": "2026-12-13",
+      "holiday": false,
+      "name": "阪神ジュベナイルフィリーズ",
+      "grade": "GⅠ",
+      "venue": "阪神",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-134",
+      "aliases": [
+        "阪神ジュベナイルF",
+        "阪神JF"
+      ]
+    },
+    {
+      "date": "2026-12-19",
+      "holiday": false,
+      "name": "ターコイズステークス",
+      "grade": "GⅢ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-135",
+      "aliases": [
+        "ターコイズS"
+      ]
+    },
+    {
+      "date": "2026-12-20",
+      "holiday": false,
+      "name": "朝日杯フューチュリティステークス",
+      "grade": "GⅠ",
+      "venue": "阪神",
+      "surface": "芝",
+      "distance": 1600,
+      "id": "jra-2026-136",
+      "aliases": [
+        "朝日杯フューチュリティS",
+        "朝日杯FS"
+      ]
+    },
+    {
+      "date": "2026-12-26",
+      "holiday": false,
+      "name": "中山大障害",
+      "grade": "J・GⅠ",
+      "venue": "中山",
+      "surface": "障害",
+      "distance": 4100,
+      "id": "jra-2026-137",
+      "aliases": [
+        "中山大障害"
+      ]
+    },
+    {
+      "date": "2026-12-26",
+      "holiday": false,
+      "name": "ホープフルステークス",
+      "grade": "GⅠ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 2000,
+      "id": "jra-2026-138",
+      "aliases": [
+        "ホープフルS"
+      ]
+    },
+    {
+      "date": "2026-12-26",
+      "holiday": false,
+      "name": "阪神カップ",
+      "grade": "GⅡ",
+      "venue": "阪神",
+      "surface": "芝",
+      "distance": 1400,
+      "id": "jra-2026-139",
+      "aliases": [
+        "阪神C"
+      ]
+    },
+    {
+      "date": "2026-12-27",
+      "holiday": false,
+      "name": "有馬記念",
+      "grade": "GⅠ",
+      "venue": "中山",
+      "surface": "芝",
+      "distance": 2500,
+      "id": "jra-2026-140",
+      "aliases": [
+        "有馬記念"
+      ]
+    }
+  ]
+}

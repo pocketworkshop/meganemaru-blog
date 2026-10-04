@@ -2,12 +2,15 @@ import app from './index.js';
 import { publicPosts } from './cms/cms.js';
 import { handleHandshake, refreshHandshakeSchedules } from './handshake/schedule.mjs';
 import { handleContact } from './contact.js';
+import { handleWeeklyRaces } from './keiba/weekly.js';
 
 const TYPE = 'ske48_yesterday';
 const TODAY_CACHE_SECONDS = 6 * 60 * 60;
 
 export default {
   async fetch(request, env, ctx) {
+    const weeklyResponse = await handleWeeklyRaces(request, env);
+    if (weeklyResponse) return weeklyResponse;
     const contactResponse = await handleContact(request, env);
     if (contactResponse) return contactResponse;
     const handshakeResponse = await handleHandshake(request, env, ctx);
@@ -82,6 +85,7 @@ async function sitemapXml(request, env) {
     `${origin}/tools/conversation-report/`,
     `${origin}/tools/handshake-manager/`,
     `${origin}/tools/umamikuji/`,
+    `${origin}/keiba/weekly/`,
   ];
 
   const posts = await publicPosts(request, env);

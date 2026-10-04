@@ -14,6 +14,8 @@
       "/data/posts.json",
       "/blog/article",
       "/blog/article.html",
+      "/keiba/weekly",
+      "/keiba/weekly/*",
       "/robots.txt"
     ]
   },
