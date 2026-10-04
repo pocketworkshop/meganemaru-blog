@@ -1,15 +1,25 @@
 import app from './index.js';
+import { publicPosts } from './cms/cms.js';
 import { handleHandshake, refreshHandshakeSchedules } from './handshake/schedule.mjs';
+import { handleContact } from './contact.js';
 
 const TYPE = 'ske48_yesterday';
 const TODAY_CACHE_SECONDS = 6 * 60 * 60;
 
 export default {
   async fetch(request, env, ctx) {
+    const contactResponse = await handleContact(request, env);
+    if (contactResponse) return contactResponse;
     const handshakeResponse = await handleHandshake(request, env, ctx);
     if (handshakeResponse) return handshakeResponse;
     const url = new URL(request.url);
 
+    if (url.pathname === '/robots.txt') {
+      return robotsTxt(request);
+    }
+    if (url.pathname === '/sitemap.xml') {
+      return sitemapXml(request, env);
+    }
     if (url.pathname === '/api/ske48/today') {
       return cachedToday(request, env, ctx);
     }
@@ -31,6 +41,96 @@ export default {
     ctx.waitUntil(refreshHandshakeSchedules(env));
   },
 };
+
+function robotsTxt(request) {
+  if (!['GET', 'HEAD'].includes(request.method)) {
+    return new Response('Method Not Allowed', { status: 405 });
+  }
+  const origin = new URL(request.url).origin;
+  const body = [
+    'User-agent: *',
+    'Allow: /',
+    'Disallow: /admin/',
+    'Disallow: /api/',
+    '',
+    `Sitemap: ${origin}/sitemap.xml`,
+    '',
+  ].join('\n');
+  return new Response(request.method === 'HEAD' ? null : body, {
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600',
+      'X-Content-Type-Options': 'nosniff',
+    },
+  });
+}
+
+async function sitemapXml(request, env) {
+  if (!['GET', 'HEAD'].includes(request.method)) {
+    return new Response('Method Not Allowed', { status: 405 });
+  }
+
+  const origin = new URL(request.url).origin;
+  const staticUrls = [
+    `${origin}/`,
+    `${origin}/blog/`,
+    `${origin}/about/`,
+    `${origin}/privacy/`,
+    `${origin}/terms/`,
+    `${origin}/contact/`,
+    `${origin}/ske48/`,
+    `${origin}/tools/conversation-report/`,
+    `${origin}/tools/handshake-manager/`,
+  ];
+
+  const posts = await publicPosts(request, env);
+  const articleUrls = posts.map(post => ({
+    loc: `${origin}/blog/article.html?slug=${encodeURIComponent(post.slug || post.id)}`,
+    lastmod: normalizeLastmod(post.updatedAt || post.date),
+  }));
+
+  const rows = [
+    ...staticUrls.map(loc => ({ loc })),
+    ...articleUrls,
+  ];
+
+  const xml = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ...rows.map(({ loc, lastmod }) => [
+      '  <url>',
+      `    <loc>${escapeXml(loc)}</loc>`,
+      lastmod ? `    <lastmod>${escapeXml(lastmod)}</lastmod>` : '',
+      '  </url>',
+    ].filter(Boolean).join('\n')),
+    '</urlset>',
+    '',
+  ].join('\n');
+
+  return new Response(request.method === 'HEAD' ? null : xml, {
+    headers: {
+      'Content-Type': 'application/xml; charset=utf-8',
+      'Cache-Control': 'public, max-age=900',
+      'X-Content-Type-Options': 'nosniff',
+    },
+  });
+}
+
+function normalizeLastmod(value) {
+  const text = String(value || '').trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+  const date = new Date(text);
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString();
+}
+
+function escapeXml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&apos;');
+}
 
 async function cachedToday(request, env, ctx) {
   if (request.method !== 'GET') return app.fetch(request, env, ctx);

@@ -2,12 +2,24 @@ async function api(path, options={}) {
   const headers=new Headers(options.headers||{});
   if(options.method && !['GET','HEAD'].includes(options.method)) headers.set('X-CMS-Request','1');
   const response=await fetch(path,{...options,headers,credentials:'same-origin'});
-  if(!response.ok) throw new Error('security alert request failed');
+  if(!response.ok) throw new Error('admin request failed');
   return response.json();
 }
 function fmt(iso){
   try{return new Intl.DateTimeFormat('ja-JP',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Tokyo'}).format(new Date(iso));}
   catch{return iso||'';}
+}
+async function showContactShortcut(){
+  try{
+    const data=await api('/api/admin/contacts?unread=1&limit=1');
+    const header=document.querySelector('.cms-header > div');
+    if(!header || document.getElementById('contactAdminLink')) return;
+    const link=document.createElement('a');
+    link.id='contactAdminLink';
+    link.href='/admin/contacts.html';
+    link.textContent=`お問い合わせ${data.unreadCount?`（未読${data.unreadCount}）`:''}`;
+    header.prepend(link);
+  }catch{}
 }
 async function showAlert(){
   try{
@@ -31,4 +43,5 @@ async function showAlert(){
     });
   }catch{}
 }
+showContactShortcut();
 showAlert();

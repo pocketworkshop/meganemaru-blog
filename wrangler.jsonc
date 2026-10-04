@@ -13,7 +13,9 @@
       "/media/cms/*",
       "/data/posts.json",
       "/blog/article",
-      "/blog/article.html"
+      "/blog/article.html",
+      "/robots.txt",
+      "/sitemap.xml"
     ]
   },
   "d1_databases": [

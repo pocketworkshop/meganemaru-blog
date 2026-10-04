@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#ff6f91" />
+  <meta name="description" content="めがねまるのブログへのお問い合わせページです。" />
+  <title>お問い合わせ | めがねまるのブログ</title>
+  <link rel="canonical" href="https://meganemaru-blog.pwtools.workers.dev/contact/" />
+  <link rel="icon" href="/assets/bear-logo.png" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/contact/contact.css" />
+  <style>.footer-links{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:flex-end;margin-top:8px}.footer-links a{color:inherit}@media(max-width:720px){.footer-links{justify-content:flex-start}}</style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="ホーム"><img class="brand-logo" src="/assets/bear-logo.png" alt="" aria-hidden="true" /><span><strong>めがねまるのブログ</strong><small>好きなことで、毎日をちょっと楽しく。</small></span></a>
+    <nav class="main-nav" aria-label="メインメニュー"><a href="/">⌂ ホーム</a><a href="/blog/">▤ 最新記事</a></nav>
+  </header>
+  <main class="contact-shell">
+    <section class="contact-card">
+      <span class="section-kicker">CONTACT</span>
+      <h1>お問い合わせ</h1>
+      <p class="contact-lead">ブログや掲載内容、便利ツールなどについてのご連絡はこちらからお願いします。</p>
+      <form id="contactForm">
+        <label>お名前 <span>任意</span><input id="contactName" name="name" maxlength="80" autocomplete="name" /></label>
+        <label>メールアドレス <span>必須</span><input id="contactEmail" name="email" type="email" maxlength="254" autocomplete="email" required /></label>
+        <label>件名 <span>必須</span><input id="contactSubject" name="subject" maxlength="160" required /></label>
+        <label>お問い合わせ内容 <span>必須</span><textarea id="contactMessage" name="message" maxlength="5000" rows="9" required></textarea></label>
+        <label class="hp-field" aria-hidden="true">Webサイト<input id="contactWebsite" name="website" tabindex="-1" autocomplete="off" /></label>
+        <p class="contact-note">送信された内容は、お問い合わせへの対応のためブログの管理用データベースに保存されます。</p>
+        <button id="contactSubmit" type="submit" class="primary-button">送信する</button>
+        <p id="contactStatus" class="contact-status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+  </main>
+  <footer class="site-footer"><div class="shell footer-inner"><div><strong>めがねまるのブログ</strong><p>好きなものを、好きなペースで。</p></div><div><div class="footer-links"><a href="/about/">このブログについて</a><a href="/privacy/">プライバシーポリシー</a><a href="/terms/">利用規約</a><a href="/contact/">お問い合わせ</a></div></div></div></footer>
+  <script src="/contact/contact.js"></script>
+</body>
+</html>
