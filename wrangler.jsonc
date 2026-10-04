@@ -14,8 +14,7 @@
       "/data/posts.json",
       "/blog/article",
       "/blog/article.html",
-      "/robots.txt",
-      "/sitemap.xml"
+      "/robots.txt"
     ]
   },
   "d1_databases": [
