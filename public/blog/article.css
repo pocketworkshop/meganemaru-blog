@@ -45,3 +45,17 @@
 .article-prose th,.article-prose td{border:1px solid #ddd3d9;padding:8px;overflow-wrap:anywhere}
 .article-prose [style*="font-family:serif"],.article-prose [style*="font-family: serif"]{font-family:"Yu Mincho","Hiragino Mincho ProN","Noto Serif CJK JP",serif!important}
 .article-prose [style*="font-family:sans-serif"],.article-prose [style*="font-family: sans-serif"]{font-family:"Yu Gothic","Hiragino Kaku Gothic ProN",Meiryo,sans-serif!important}
+
+/* Daily Japan-equity articles only; prices also carry explicit text labels. */
+.stock-daily table{margin:14px 0 12px;font-variant-numeric:tabular-nums;font-size:1rem}
+.stock-daily table th:first-child{width:24%}
+.stock-daily td,.stock-daily th{text-align:left;vertical-align:middle;padding:12px 8px}
+.stock-daily thead{background:#edf4ff}
+.stock-daily hr{border:0;border-top:3px solid #cfe0fa;margin:32px 0}
+.stock-daily h2{border-bottom-color:#cfe0fa}
+.stock-daily .stock-rise{color:#b91c1c;font-weight:700}
+.stock-daily .stock-fall{color:#1858b8;font-weight:700}
+.stock-daily .stock-flat{color:#52606d;font-weight:700}
+.stock-daily a{display:inline-block;min-height:44px;padding:8px 0;color:#1858b8}
+.stock-daily small{font-size:.88rem;color:#655c65}
+@media(max-width:480px){.stock-daily{padding:18px 14px}.stock-daily table{font-size:1rem}.stock-daily th,.stock-daily td{padding:10px 5px}.stock-daily h2{font-size:1.35rem}}

@@ -88,7 +88,8 @@ export async function readJson(request) {
 export function cleanHtml(input) {
   return sanitizeHtml(String(input || ''), {
     allowedTags:['p','br','h1','h2','h3','h4','strong','b','em','i','s','u','ul','ol','li','a','blockquote','hr','pre','code','span','img','figure','figcaption','table','thead','tbody','tr','th','td'],
-    allowedAttributes:{'*':['style'],a:['href','title','rel','target'],img:['src','alt','title','width','loading'],ol:['start'],th:['colspan','rowspan'],td:['colspan','rowspan']},
+    allowedAttributes:{'*':['style'],span:['class'],a:['href','title','rel','target'],img:['src','alt','title','width','loading'],ol:['start'],th:['colspan','rowspan'],td:['colspan','rowspan']},
+    allowedClasses:{span:['stock-rise','stock-fall','stock-flat']},
     allowedStyles:{'*':{'text-align':[/^(left|center|right|justify)$/],'font-family':[/^(sans-serif|serif)$/],'font-size':[/^(14|16|18|20|24|28|32)px$/]}},
     allowedSchemes:['http','https','mailto'], allowedSchemesByTag:{img:['https']}, allowProtocolRelative:false,
     transformTags:{a:(tag,attrs)=>({tagName:'a',attribs:{...attrs,rel:'noopener noreferrer',target:'_blank'}}),img:(tag,attrs)=>{

@@ -1,4 +1,6 @@
 import app from './index.js';
+import { runStockCron, handleStockStatus } from './stocks/daily.mjs';
+import { STOCK_CRONS } from './stocks/calendar.mjs';
 import { publicPosts } from './cms/cms.js';
 import { handleHandshake, refreshHandshakeSchedules } from './handshake/schedule.mjs';
 import { handleContact } from './contact.js';
@@ -9,6 +11,8 @@ const TODAY_CACHE_SECONDS = 6 * 60 * 60;
 
 export default {
   async fetch(request, env, ctx) {
+    const stockStatus = await handleStockStatus(request, env);
+    if (stockStatus) return stockStatus;
     const weeklyResponse = await handleWeeklyRaces(request, env);
     if (weeklyResponse) return weeklyResponse;
     const contactResponse = await handleContact(request, env);
@@ -40,8 +44,14 @@ export default {
   },
 
   async scheduled(controller, env, ctx) {
-    ctx.waitUntil(saveYesterday(env, ctx));
-    ctx.waitUntil(refreshHandshakeSchedules(env));
+    if (STOCK_CRONS[controller.cron]) {
+      ctx.waitUntil(runStockCron(controller, env));
+      return;
+    }
+    if (controller.cron === '0 22 * * *') {
+      ctx.waitUntil(saveYesterday(env, ctx));
+      ctx.waitUntil(refreshHandshakeSchedules(env));
+    }
   },
 };
 

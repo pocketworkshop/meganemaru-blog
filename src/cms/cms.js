@@ -1,9 +1,19 @@
+import { DAILY_KIND, nextStockLink } from '../stocks/render.mjs';
 import {authorize,checkLoginRateLimit,recordLoginFailure,clearLoginFailures,getSecurityAlert,acknowledgeSecurityAlert,verifyAdminPassword,makeSessionCookie,clearSessionCookie,loginPage,requireMutation,readJson,boundedBody,cleanHtml,escapeHtml as esc,fail,CmsError,secureResponse} from './security.js';
 const categories=['SKE48','競馬','株','ゲーム','便利ツール','雑記'];
 const now=()=>new Date().toISOString();
 const json=(value,status=200)=>new Response(JSON.stringify(value),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}});
 const stmt=(env,sql,...args)=>env.DB.prepare(sql).bind(...args);
-const asPost=row=>({ ...JSON.parse(row.extra_json||'{}'), id:row.id,slug:row.slug,title:row.title,category:row.category,date:row.date,summary:row.summary,theme:row.theme,bodyHtml:row.body_html,status:row.status,version:row.version,updatedAt:row.updated_at});
+const asPost=row=>({ ...JSON.parse(row.extra_json||'{}'), id:row.id,slug:row.slug,title:row.title,category:row.category,date:row.date,summary:row.summary,theme:row.theme,bodyHtml:row.body_html,status:row.status,version:row.version,updatedAt:row.updated_at,createdAt:row.created_at});
+function asPublicPost(row) {
+ const post=asPost(row);
+ if(post.marketDaily?.kind===DAILY_KIND){
+  const meta=post.marketDaily,sessions={};
+  for(const phase of ['morning','close'])if(meta.sessions?.[phase])sessions[phase]={asOf:meta.sessions[phase].asOf,fetchedAt:meta.sessions[phase].fetchedAt};
+  post.marketDaily={kind:DAILY_KIND,date:meta.date,sessions};
+ }
+ return post;
+}
 export async function legacyPosts(request,env) {
  const url=new URL('/data/posts.json',request.url);
  const response=await env.ASSETS.fetch(new Request(url));
@@ -16,7 +26,7 @@ export async function publicPosts(request,env) {
  try{rows=await env.DB.prepare("SELECT * FROM cms_posts WHERE status='published' ORDER BY date DESC,updated_at DESC").all();keys=await env.DB.prepare('SELECT key FROM cms_keys').all();}
  catch(e){if(!env.DB || /no such table: (?:main\.)?cms_/.test(String(e)))return legacy.map(p=>({...p,bodyHtml:cleanHtml(p.bodyHtml)}));throw e;}
  const managed=new Set(keys.results.map(x=>x.key));
- return [...rows.results.map(asPost),...legacy.filter(p=>!managed.has(String(p.slug||''))&&!managed.has(String(p.id||''))).map(p=>({...p,bodyHtml:cleanHtml(p.bodyHtml)}))].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+ return [...rows.results.map(asPublicPost),...legacy.filter(p=>!managed.has(String(p.slug||''))&&!managed.has(String(p.id||''))).map(p=>({...p,bodyHtml:cleanHtml(p.bodyHtml)}))].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
 }
 function validate(data) {
  if(!data||typeof data!=='object'||Array.isArray(data))fail(400,'記事形式が不正です。');
@@ -126,11 +136,11 @@ async function media(request,env,key,admin){
  if(request.method==='HEAD')await body.cancel();
  return new Response(request.method==='HEAD'?null:body,{headers});
 }
-function articleMarkup(post,preview=false,origin=''){
+function articleMarkup(post,preview=false,origin='',posts=[]){
  const share=new URL('https://x.com/intent/tweet');share.searchParams.set('text',post.title);share.searchParams.set('url',`${origin}/blog/article.html?slug=${encodeURIComponent(post.slug||post.id)}`);
  const theme=({'SKE48':'ske','競馬':'keiba','株':'stock','ゲーム':'game','便利ツール':'tool','雑記':'note'})[post.category]||'note';
  const body=preview?cleanHtml(post.bodyHtml).replaceAll('/media/cms/','/admin/media/cms/'):cleanHtml(post.bodyHtml);
- return `<article><header class="article-header"><a class="back-link" href="${preview?'/admin/':'/blog/'}">‹ ${preview?'管理画面':'記事一覧'}へ戻る</a><div class="article-meta"><span class="chip chip-${theme}">${esc(post.category)}</span><time>${esc(post.date.replaceAll('-','.'))}</time></div><h1>${esc(post.title)}</h1><p class="article-lead">${esc(post.summary)}</p>${preview?'':`<div class="article-share"><a class="article-share-x" href="${esc(share.href)}" target="_blank" rel="noopener noreferrer">Xで共有</a></div>`}</header><div class="article-prose">${body}</div></article>`;
+ return `<article><header class="article-header"><a class="back-link" href="${preview?'/admin/':'/blog/'}">‹ ${preview?'管理画面':'記事一覧'}へ戻る</a><div class="article-meta"><span class="chip chip-${theme}">${esc(post.category)}</span><time>${esc(post.date.replaceAll('-','.'))}</time></div><h1>${esc(post.title)}</h1><p class="article-lead">${esc(post.summary)}</p>${preview?'':`<div class="article-share"><a class="article-share-x" href="${esc(share.href)}" target="_blank" rel="noopener noreferrer">Xで共有</a></div>`}</header><div class="article-prose${post.marketDaily?.kind===DAILY_KIND?' stock-daily':''}">${body}${preview?'':nextStockLink(post,posts)}</div></article>`;
 }
 async function articleTemplate(request,env) {
  let url=new URL('/blog/article.html',request.url);
@@ -141,10 +151,11 @@ async function articleTemplate(request,env) {
  }
  fail(503,'記事テンプレートの転送を確認してください。');
 }
-async function articlePage(request,env,post,preview=false){
+async function articlePage(request,env,post,preview=false,posts=[]){
  const template=await articleTemplate(request,env);
  const canonical=new URL('/blog/article.html',request.url);canonical.searchParams.set('slug',post.slug||post.id);
- let response=new HTMLRewriter().on('title',{element:e=>e.setInnerContent(`${esc(post.title)} | めがねまるのブログ`,{html:true})}).on('meta[name="description"]',{element:e=>e.setAttribute('content',post.summary||'')}).on('head',{element:e=>{if(preview)e.prepend(`<base href="${esc(new URL(request.url).origin)}/"><meta name="robots" content="noindex,nofollow">`,{html:true});else e.append(`<link rel="canonical" href="${esc(canonical.href)}">`,{html:true});}}).on('#articleRoot',{element:e=>{e.setAttribute('data-server-rendered','true');e.setInnerContent(articleMarkup(post,preview,new URL(request.url).origin),{html:true});}});
+ let response=new HTMLRewriter().on('title',{element:e=>e.setInnerContent(`${esc(post.title)} | めがねまるのブログ`,{html:true})}).on('meta[name="description"]',{element:e=>e.setAttribute('content',post.summary||'')}).on('head',{element:e=>{if(preview)e.prepend(`<base href="${esc(new URL(request.url).origin)}/"><meta name="robots" content="noindex,nofollow">`,{html:true});else e.append(`<link rel="canonical" href="${esc(canonical.href)}">`,{html:true});}}).on('#articleRoot',{element:e=>{e.setAttribute('data-server-rendered','true');e.setInnerContent(articleMarkup(post,preview,new URL(request.url).origin,posts),{html:true});}});
+ if(!preview && post.marketDaily?.kind===DAILY_KIND)response=response.on('head',{element:e=>e.append(`<meta property="og:type" content="article"><meta property="og:site_name" content="めがねまるのブログ"><meta property="og:title" content="${esc(post.title)}"><meta property="og:description" content="${esc(post.summary)}"><meta property="og:url" content="${esc(canonical.href)}"><meta property="og:locale" content="ja_JP"><meta name="twitter:card" content="summary"><meta property="article:published_time" content="${esc(post.createdAt||post.date)}"><meta property="article:modified_time" content="${esc(post.updatedAt||post.date)}">`,{html:true})});
  if(preview)response=response.on('script',{element:e=>e.remove()});
  const rendered=response.transform(template);const headers=new Headers(rendered.headers);headers.set('Cache-Control','no-store');return new Response(rendered.body,{status:200,headers});
 }
@@ -214,7 +225,7 @@ export async function handleCms(request,env){
   else {
    const slug=url.searchParams.get('slug'),posts=await publicPosts(request,env),post=posts.find(p=>p.slug===slug||p.id===slug);
    if(!post){const template=await articleTemplate(request,env);const html=new HTMLRewriter().on('#articleRoot',{element:e=>e.setInnerContent('<h1>記事が見つかりませんでした。</h1><a href="/blog/">記事一覧へ戻る</a>',{html:true})}).transform(template);response=new Response(html.body,{status:404,headers:html.headers});}
-   else response=await articlePage(request,env,post);
+   else response=await articlePage(request,env,post,false,posts);
   }
   return secureResponse(response,admin);
  }catch(error){

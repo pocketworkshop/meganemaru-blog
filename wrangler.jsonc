@@ -28,7 +28,10 @@
   ],
   "triggers": {
     "crons": [
-      "0 22 * * *"
+      "0 22 * * *",
+      "40,50 2 * * MON-FRI",
+      "50 6 * * MON-FRI",
+      "0 7 * * MON-FRI"
     ]
   },
   "kv_namespaces": [
@@ -36,5 +39,8 @@
       "binding": "CMS_IMAGES",
       "id": "dbcd790eee76479587266d24dc6406f0"
     }
-  ]
+  ],
+  "vars": {
+    "STOCK_DAILY_ENABLED": "true"
+  }
 }
