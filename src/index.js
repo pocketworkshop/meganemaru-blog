@@ -11,6 +11,7 @@ const SCHEDULE_CATEGORIES = [
 ];
 
 const SKE48_YOUTUBE_HANDLE = "https://www.youtube.com/@SKE48_official";
+const SKE48_YOUTUBE_CHANNEL_ID = "UCG-5D9k_fL4FnMeNuraeAtA";
 const BING_NEWS_BASE = "https://www.bing.com/news/search";
 const SKE48_PROFILE_URL = "https://ske48.co.jp/feature/profile";
 
@@ -111,7 +112,7 @@ async function getYesterdayDigest(request, ctx) {
   const origin = new URL(request.url).origin;
 
   const cacheKey = new Request(
-    `${origin}/api/ske48/yesterday?date=${encodeURIComponent(dateKey)}&digest=9`,
+    `${origin}/api/ske48/yesterday?date=${encodeURIComponent(dateKey)}&digest=10`,
     { method: "GET" }
   );
 
@@ -653,16 +654,9 @@ function hostnameLabel(value) {
 
 async function fetchYoutube(target) {
   const sourceUrl = SKE48_YOUTUBE_HANDLE;
-  const channelId = await resolveYoutubeChannelId();
-
-  if (!channelId) {
-    return {
-      ok: false,
-      items: [],
-      sourceUrl,
-      debug: { message: "YouTube channel ID could not be resolved." },
-    };
-  }
+  // SKE48公式チャンネルIDを固定し、YouTubeチャンネルページの解析を経由せず
+  // Atom RSSを直接取得する。
+  const channelId = SKE48_YOUTUBE_CHANNEL_ID;
 
   const feedUrl =
     `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(channelId)}`;
