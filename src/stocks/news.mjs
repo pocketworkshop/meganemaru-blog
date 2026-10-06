@@ -247,24 +247,22 @@ function headlineDayMatches(title, date) {
     }
   }
 
+  // Bing News RSS の pubDate は実際の配信時刻と大きくずれることがある。
+  // 見出しに「6日前引け」「6日大引け」のような日付が明記されている場合は、
+  // その日付を優先して前日記事の混入を防ぐ。
+  for (const match of title.matchAll(
+    /(?:日経平均|TOPIX|東証株価指数|東京株式|東証)?\s*(\d{1,2})日(?:前引け|大引け|終値|前場|後場|引け)/g
+  )) {
+    if (Number(match[1]) !== d) return false;
+  }
+
   return true;
 }
 
 export function analyzeNews(items, { date, phase, now }) {
-  const start = Date.parse(
-    `${date}T${phase === 'morning' ? '09:00' : '12:30'}:00+09:00`
-  );
-
-  const end = Math.min(
-    now.getTime(),
-    Date.parse(
-      `${date}T${phase === 'morning' ? '12:15' : '16:30'}:00+09:00`
-    )
-  );
-
-  const cutoff = Date.parse(
-    `${date}T${phase === 'morning' ? '11:30' : '15:30'}:00+09:00`
-  );
+  // Bing News RSS の pubDate は記事の実際の公開時刻と数時間〜半日ずれることがある。
+  // そのため時刻で 09:00-12:15 / 12:30-16:30 に切るのはやめ、
+  // JSTの日付 + 見出しの「前引け / 大引け」等で当日の市況記事を判定する。
 
   const seen = new Set();
   const accepted = [];
@@ -272,13 +270,10 @@ export function analyzeNews(items, { date, phase, now }) {
   for (const item of items.sort((a, b) =>
     b.publishedAt.localeCompare(a.publishedAt)
   )) {
-    const at = Date.parse(item.publishedAt);
     const t = item.title;
 
     if (
       jstDate(item.publishedAt) !== date ||
-      at < start ||
-      at > end ||
       seen.has(item.url) ||
       !headlineDayMatches(t, date)
     ) {
@@ -297,24 +292,14 @@ export function analyzeNews(items, { date, phase, now }) {
       continue;
     }
 
-    if (
-      phase === 'morning' &&
-      /大引け|終値|取引終了/.test(t) &&
-      !/前場終値/.test(t)
-    ) {
-      continue;
-    }
+    const phaseCompleted =
+      phase === 'morning'
+        ? /前引け|前場終値|前場終了|前場.*引け/.test(t)
+        : /大引け|終値|取引終了|引け後|東京株式.*引け/.test(t);
 
-    if (
-      phase === 'close' &&
-      /前引け|前場終値|前場終了/.test(t)
-    ) {
-      continue;
-    }
+    if (!phaseCompleted) continue;
 
     const facts = extractFacts(item, phase);
-
-    if (facts.completed && at < cutoff) continue;
 
     if (
       !Object.keys(facts.indices).length &&
