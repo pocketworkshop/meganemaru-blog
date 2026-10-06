@@ -1,11 +1,12 @@
-// Free RSS discovery, as used by the existing SKE48 feature. No article scraping.
+// Free RSS discovery for the stock daily summary. No article-body scraping.
 import { jstDate } from './calendar.mjs';
 
 const HOSTS = [
   'nikkei.com','jiji.com','reuters.com','bloomberg.com','nhk.or.jp','web.nhk',
   'asahi.com','mainichi.jp','yomiuri.co.jp','sankei.com','47news.jp',
   'kyodonews.jp','news.tv-asahi.co.jp','news.ntv.co.jp','newsdig.tbs.co.jp',
-  'news.tbs.co.jp','fnn.jp','quickmoneyworld.jp'
+  'news.tbs.co.jp','fnn.jp','quickmoneyworld.jp',
+  'minkabu.jp','kabutan.jp','traders.co.jp','fisco.jp','finance.yahoo.co.jp'
 ];
 
 const SECTORS = [
@@ -21,24 +22,18 @@ const COMPANIES = [
 ];
 
 const decode = text =>
-  text
+  String(text || '')
     .replace(/&(?:amp|lt|gt|quot|apos);/g, s => ({
-      '&amp;':'&',
-      '&lt;':'<',
-      '&gt;':'>',
-      '&quot;':'"',
-      '&apos;':"'"
+      '&amp;':'&','&lt;':'<','&gt;':'>','&quot;':'"','&apos;':"'"
     }[s]))
     .replace(/&#(x[0-9a-f]+|\d+);/gi, (_, n) => {
-      const c = n[0].toLowerCase() === 'x'
-        ? parseInt(n.slice(1), 16)
-        : Number(n);
+      const c = n[0].toLowerCase() === 'x' ? parseInt(n.slice(1), 16) : Number(n);
       return c > 0 && c <= 0x10ffff ? String.fromCodePoint(c) : '';
     });
 
 const tag = (xml, name) => {
   const raw =
-    xml.match(new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${name}>`, 'i'))?.[1] || '';
+    String(xml).match(new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${name}>`, 'i'))?.[1] || '';
   return decode(
     raw
       .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
@@ -83,17 +78,17 @@ export function parseRss(xml) {
   }
 
   return [...xml.matchAll(/<item(?:\s[^>]*)?>([\s\S]*?)<\/item>/gi)]
-    .slice(0, 40)
+    .slice(0, 50)
     .map(m => {
       const url = newsUrl(tag(m[1], 'link'));
       const at = Date.parse(tag(m[1], 'pubDate'));
-
       return {
         title: tag(m[1], 'title').normalize('NFKC').slice(0, 400),
         url,
         publishedAt: Number.isFinite(at) ? new Date(at).toISOString() : null,
         source:
           tag(m[1], 'News:Source').slice(0, 80) ||
+          tag(m[1], 'source').slice(0, 80) ||
           (url ? new URL(url).hostname : ''),
       };
     })
@@ -101,10 +96,8 @@ export function parseRss(xml) {
 }
 
 const signal = clause => {
-  // Only an unambiguous move directly following the subject is used.
-  // Never infer a cause.
   if (
-    /予想|見通し|見込み|可能性|だろう|なるか|期待|狙う|先物|寄り付き|寄付|せず|できず|届かず|一服|下げ止ま|抑え|抑制|反発力|上昇には|下落には|上昇率ランキング|ADR|海外市場|米国市場|[?？]|(?:高|安|上昇|下落|反発|反落)か/.test(clause)
+    /予想|見通し|見込み|可能性|だろう|なるか|期待|狙う|先物|寄り付き|寄付|ADR|海外市場|米国市場|[?？]/.test(clause)
   ) {
     return null;
   }
@@ -115,7 +108,6 @@ const signal = clause => {
   if (up && down) return null;
   if (up) return 'up';
   if (down) return 'down';
-
   return /横ばい|小動き/.test(clause) ? 'flat' : null;
 };
 
@@ -131,18 +123,46 @@ function subjectClause(title, subject) {
     return null;
   }
 
+  // 「日経平均6日前引け＝続伸、134円高」のような一般的な見出しを拾うため、
+  // ＝ と = では切らない。
   const text = title
     .slice(i + subject.length)
-    .split(/[、。,;；｜|＝=]/)[0]
-    .slice(0, 65);
+    .split(/[、。,;；｜|]/)[0]
+    .slice(0, 90);
 
-  // Stop at another subject:
-  // "日経平均は上昇、TOPIXは下落" must remain two facts.
   const boundary = text.search(
     /日経平均|TOPIX|米国|米株|NY|ダウ|ナスダック|東京エレクトロン|半導体|銀行株/
   );
 
   return boundary >= 0 ? text.slice(0, boundary) : text;
+}
+
+function extractChange(clause) {
+  const explicit = clause.match(
+    /前(?:営業)?日比\s*([0-9,]+(?:\.\d+)?)\s*(円|ポイント|%)\s*(高|安|上昇|下落)/
+  );
+  if (explicit) {
+    return {
+      value:
+        Number(explicit[1].replaceAll(',', '')) *
+        (/安|下落/.test(explicit[3]) ? -1 : 1),
+      unit: explicit[2],
+    };
+  }
+
+  const compact = clause.match(
+    /([0-9,]+(?:\.\d+)?)\s*(円|ポイント|%)\s*(高|安)(?!値)/
+  );
+  if (compact) {
+    return {
+      value:
+        Number(compact[1].replaceAll(',', '')) *
+        (compact[3] === '安' ? -1 : 1),
+      unit: compact[2],
+    };
+  }
+
+  return null;
 }
 
 export function extractFacts(item, phase) {
@@ -167,24 +187,9 @@ export function extractFacts(item, phase) {
     const move = signal(clause);
     if (!move) continue;
 
-    const match = clause.match(
-      /前(?:営業)?日比\s*([0-9,]+(?:\.\d+)?)\s*(円|ポイント|%)\s*(高|安|上昇|下落)/
-    );
-
-    const change = match
-      ? {
-          value:
-            Number(match[1].replaceAll(',', '')) *
-            (/安|下落/.test(match[3]) ? -1 : 1),
-          unit: match[2],
-        }
-      : null;
-
-    // Exact index levels aren't reconstructed from milestones
-    // or intraday high/low headlines.
     indices[key] = {
       direction: move,
-      change,
+      change: extractChange(clause),
       completed: completed && !/一時|場中|途中/.test(clause),
       evidence: item.url,
     };
@@ -196,7 +201,6 @@ export function extractFacts(item, phase) {
   for (const name of SECTORS) {
     const clause = subjectClause(title, name);
     if (clause === null) continue;
-
     const move = signal(clause);
     if (
       move &&
@@ -214,7 +218,6 @@ export function extractFacts(item, phase) {
   for (const name of COMPANIES) {
     const clause = subjectClause(title, name);
     if (clause === null) continue;
-
     const move = signal(clause);
     if (move) {
       stocks.push({
@@ -236,7 +239,10 @@ function headlineDayMatches(title, date) {
     /(?:(\d{4})年)?(\d{1,2})月(\d{1,2})日|(\d{1,2})\/(\d{1,2})(?!\d)/g
   )) {
     if (match[1] && Number(match[1]) !== Number(date.slice(0, 4))) return false;
-    if (Number(match[2] || match[4]) !== m || Number(match[3] || match[5]) !== d) {
+    if (
+      Number(match[2] || match[4]) !== m ||
+      Number(match[3] || match[5]) !== d
+    ) {
       return false;
     }
   }
@@ -252,7 +258,7 @@ export function analyzeNews(items, { date, phase, now }) {
   const end = Math.min(
     now.getTime(),
     Date.parse(
-      `${date}T${phase === 'morning' ? '11:55' : '16:30'}:00+09:00`
+      `${date}T${phase === 'morning' ? '12:15' : '16:30'}:00+09:00`
     )
   );
 
@@ -321,20 +327,17 @@ export function analyzeNews(items, { date, phase, now }) {
     seen.add(item.url);
     accepted.push({ ...item, ...facts });
 
-    if (accepted.length >= 8) break;
+    if (accepted.length >= 10) break;
   }
 
   if (!accepted.length) return null;
 
-  // Keep only evidence that was actually used.
-  // Headlines and descriptions aren't republished.
   const indices = {};
   const topics = [];
   const stocks = [];
 
   const choose = candidates => {
     if (!candidates.length) return null;
-
     const completed = candidates.filter(c => c.fact.completed);
     const list = completed.length ? completed : candidates;
     const newest = list[0];
@@ -354,7 +357,6 @@ export function analyzeNews(items, { date, phase, now }) {
           fact: n.indices[key],
         }))
     );
-
     if (fact) indices[key] = fact;
   }
 
@@ -394,6 +396,8 @@ export function analyzeNews(items, { date, phase, now }) {
       publishedAt,
     }));
 
+  if (!sources.length) return null;
+
   const fingerprint = JSON.stringify({
     indices,
     topics,
@@ -421,8 +425,8 @@ export function analyzeNews(items, { date, phase, now }) {
 export function rssUrls(phase) {
   const terms =
     phase === 'morning'
-      ? ['日経平均 TOPIX 前引け', '東証 半導体株 銀行株 前場']
-      : ['日経平均 TOPIX 大引け', '東京株式 半導体株 銀行株 大引け'];
+      ? ['日経平均 前引け', 'TOPIX 前引け', '東京株式 前場']
+      : ['日経平均 大引け', 'TOPIX 大引け', '東京株式 大引け'];
 
   return terms.map(
     q =>
@@ -435,8 +439,6 @@ export function rssUrls(phase) {
 export async function fetchMarketNews(date, phase, now, fetcher = fetch) {
   const results = await Promise.allSettled(
     rssUrls(phase).map(async url => {
-      // SKE48のBing News RSS取得と同じ方針:
-      // リダイレクトは通常のfetchに任せ、BingのContent-Type表記に過剰依存しない。
       const response = await fetcher(url, {
         headers: {
           Accept:
@@ -454,7 +456,6 @@ export async function fetchMarketNews(date, phase, now, fetcher = fetch) {
 
       const xml = await response.text();
 
-      // 異常に大きなレスポンスだけは安全のため拒否。
       if (new TextEncoder().encode(xml).byteLength > 250000) {
         throw new Error('news_too_large');
       }
@@ -531,6 +532,8 @@ export function mergeNews(previous, current) {
     .sort((a, b) =>
       b.publishedAt.localeCompare(a.publishedAt)
     );
+
+  if (!sources.length) return current;
 
   return {
     ...current,

@@ -14,7 +14,7 @@ export function calendarState(date) {
   const day = new Date(`${date}T00:00:00Z`).getUTCDay();
   if (day === 0 || day === 6) return 'closed';
   const list = holidays[Number(date.slice(0, 4))];
-  if (!list) return 'unknown'; // Never assume an unreviewed year's weekdays are trading days.
+  if (!list) return 'unknown';
   return list.split(' ').includes(date.slice(5)) ? 'closed' : 'candidate';
 }
 export function nextTradingDate(date) {
@@ -28,7 +28,8 @@ export function nextTradingDate(date) {
   return null;
 }
 export const STOCK_CRONS = Object.freeze({
-  '40,50 2 * * MON-FRI': 'morning', // JST 11:40, retry 11:50
+  '40,50 2 * * MON-FRI': 'morning', // JST 11:40, 11:50
+  '5 3 * * MON-FRI': 'morning', // JST 12:05 late-news retry
   '50 6 * * MON-FRI': 'close', // JST 15:50
-  '0 7 * * MON-FRI': 'close', // JST 16:00, retry only
+  '0 7 * * MON-FRI': 'close', // JST 16:00 retry
 });
