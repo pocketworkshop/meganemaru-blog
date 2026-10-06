@@ -30,6 +30,7 @@
     "crons": [
       "0 22 * * *",
       "40,50 2 * * MON-FRI",
+      "5 3 * * MON-FRI",
       "50 6 * * MON-FRI",
       "0 7 * * MON-FRI"
     ]
