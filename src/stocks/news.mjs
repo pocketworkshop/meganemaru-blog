@@ -111,7 +111,7 @@ const signal = clause => {
   return /横ばい|小動き/.test(clause) ? 'flat' : null;
 };
 
-function subjectClause(title, subject) {
+function subjectWindow(title, subject) {
   const i = title.indexOf(subject);
   if (i < 0) return null;
 
@@ -123,22 +123,34 @@ function subjectClause(title, subject) {
     return null;
   }
 
-  // 「日経平均6日前引け＝続伸、134円高」のような一般的な見出しを拾うため、
-  // ＝ と = では切らない。
-  const text = title
-    .slice(i + subject.length)
-    .split(/[、。,;；｜|]/)[0]
-    .slice(0, 90);
-
+  const text = title.slice(i + subject.length).slice(0, 150);
   const boundary = text.search(
-    /日経平均|TOPIX|米国|米株|NY|ダウ|ナスダック|東京エレクトロン|半導体|銀行株/
+    /日経平均|TOPIX|東証株価指数|米国|米株|NY|ダウ|ナスダック|東京エレクトロン|半導体|銀行株/
   );
-
   return boundary >= 0 ? text.slice(0, boundary) : text;
 }
 
-function extractChange(clause) {
-  const explicit = clause.match(
+function subjectClause(title, subject) {
+  const window = subjectWindow(title, subject);
+  if (window === null) return null;
+  return window.split(/[、。,;；｜|]/)[0].slice(0, 90);
+}
+
+function parseJapaneseNumber(raw) {
+  const text = String(raw || '').replaceAll(',', '').trim();
+  if (!text) return null;
+
+  const man = text.match(/^(\d+(?:\.\d+)?)万(\d+(?:\.\d+)?)?$/);
+  if (man) {
+    return Number(man[1]) * 10000 + Number(man[2] || 0);
+  }
+
+  const value = Number(text);
+  return Number.isFinite(value) ? value : null;
+}
+
+function extractChange(text) {
+  const explicit = text.match(
     /前(?:営業)?日比\s*([0-9,]+(?:\.\d+)?)\s*(円|ポイント|%)\s*(高|安|上昇|下落)/
   );
   if (explicit) {
@@ -150,7 +162,7 @@ function extractChange(clause) {
     };
   }
 
-  const compact = clause.match(
+  const compact = text.match(
     /([0-9,]+(?:\.\d+)?)\s*(円|ポイント|%)\s*(高|安)(?!値)/
   );
   if (compact) {
@@ -163,6 +175,32 @@ function extractChange(clause) {
   }
 
   return null;
+}
+
+function extractLevel(text) {
+  const valuePattern = '((?:[0-9]+(?:\\.[0-9]+)?万)?[0-9,]+(?:\\.[0-9]+)?)';
+
+  const patterns = [
+    new RegExp(`(?:円|ポイント)(?:高|安|上昇|下落)\\s*の\\s*${valuePattern}\\s*(円|ポイント)`),
+    new RegExp(`(?:終値|前引け|大引け|前場終値)\\s*(?:は|=|＝|:|：)?\\s*${valuePattern}\\s*(円|ポイント)`),
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (!match) continue;
+    const value = parseJapaneseNumber(match[1]);
+    if (value === null) continue;
+    return { value, unit: match[2] };
+  }
+
+  return null;
+}
+
+function extractPercent(level, change) {
+  if (!level || !change || level.unit !== change.unit || change.unit === '%') return null;
+  const previous = level.value - change.value;
+  if (!Number.isFinite(previous) || previous === 0) return null;
+  return change.value / previous * 100;
 }
 
 export function extractFacts(item, phase) {
@@ -182,14 +220,27 @@ export function extractFacts(item, phase) {
     if (!subject) continue;
 
     const clause = subjectClause(title, subject);
-    if (!clause || /^(?:連動|型|先物|採用|構成|算出|新規)/.test(clause)) continue;
+    const window = subjectWindow(title, subject);
+
+    if (
+      !clause ||
+      window === null ||
+      /^(?:連動|型|先物|採用|構成|算出|新規)/.test(clause)
+    ) {
+      continue;
+    }
 
     const move = signal(clause);
     if (!move) continue;
 
+    const change = extractChange(window);
+    const level = extractLevel(window);
+
     indices[key] = {
       direction: move,
-      change: extractChange(clause),
+      change,
+      level,
+      percent: extractPercent(level, change),
       completed: completed && !/一時|場中|途中/.test(clause),
       evidence: item.url,
     };
@@ -247,9 +298,6 @@ function headlineDayMatches(title, date) {
     }
   }
 
-  // Bing News RSS の pubDate は実際の配信時刻と大きくずれることがある。
-  // 見出しに「6日前引け」「6日大引け」のような日付が明記されている場合は、
-  // その日付を優先して前日記事の混入を防ぐ。
   for (const match of title.matchAll(
     /(?:日経平均|TOPIX|東証株価指数|東京株式|東証)?\s*(\d{1,2})日(?:前引け|大引け|終値|前場|後場|引け)/g
   )) {
@@ -260,10 +308,6 @@ function headlineDayMatches(title, date) {
 }
 
 export function analyzeNews(items, { date, phase, now }) {
-  // Bing News RSS の pubDate は記事の実際の公開時刻と数時間〜半日ずれることがある。
-  // そのため時刻で 09:00-12:15 / 12:30-16:30 に切るのはやめ、
-  // JSTの日付 + 見出しの「前引け / 大引け」等で当日の市況記事を判定する。
-
   const seen = new Set();
   const accepted = [];
 
@@ -323,8 +367,18 @@ export function analyzeNews(items, { date, phase, now }) {
 
   const choose = candidates => {
     if (!candidates.length) return null;
-    const completed = candidates.filter(c => c.fact.completed);
-    const list = completed.length ? completed : candidates;
+
+    const score = c =>
+      (c.fact.completed ? 8 : 0) +
+      (c.fact.level ? 4 : 0) +
+      (c.fact.change ? 2 : 0) +
+      (Number.isFinite(c.fact.percent) ? 1 : 0);
+
+    const bestScore = Math.max(...candidates.map(score));
+    const list = candidates
+      .filter(c => score(c) === bestScore)
+      .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+
     const newest = list[0];
     const simultaneous = list.filter(c => c.publishedAt === newest.publishedAt);
 
@@ -470,10 +524,18 @@ export async function fetchMarketNews(date, phase, now, fetcher = fetch) {
 export function mergeNews(previous, current) {
   if (!previous || previous.mode !== 'news') return current;
 
-  const prefer = (old, next) =>
-    old?.completed && next && !next.completed
-      ? old
-      : next || old;
+  const prefer = (old, next) => {
+    if (!old) return next;
+    if (!next) return old;
+
+    const richness = f =>
+      (f.completed ? 8 : 0) +
+      (f.level ? 4 : 0) +
+      (f.change ? 2 : 0) +
+      (Number.isFinite(f.percent) ? 1 : 0);
+
+    return richness(next) >= richness(old) ? next : old;
+  };
 
   const indices = {};
 
