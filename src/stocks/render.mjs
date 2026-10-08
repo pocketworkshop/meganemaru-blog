@@ -127,11 +127,7 @@ function marketRows(s) {
 
   const fx = s.market?.usdJpy;
   if (fx) {
-    const direction =
-      fx.direction === 'yen_weak' ? '（円安）' :
-      fx.direction === 'yen_strong' ? '（円高）' : '';
-
-    rows.push(`<tr><th>ドル円</th><td><strong>${esc(fx.display)}</strong>${direction}</td></tr>`);
+    rows.push(`<tr><th>ドル円</th><td><strong>${esc(fx.display)}</strong></td></tr>`);
   }
 
   const breadth = s.market?.breadth;
