@@ -5,8 +5,8 @@ export const ROLES = [
   { id: 'course', label: 'コース・過去走', terms: ['コース過去走', 'コース担当', '過去走担当', 'コース分析'] },
   { id: 'lap', label: 'ラップ', terms: ['ラップ適性', 'ラップ担当', 'ラップ分析'] },
   { id: 'training', label: '調教', terms: ['調教担当', '調教分析', '追い切り分析'] },
-  { id: 'final', label: '最終予想', terms: ['統括担当', '最終予想'] },
-  { id: 'review', label: '反省会', terms: ['AI予想チーム反省会', '反省会担当', 'レース後反省会'] },
+  { id: 'final', label: '最終予想', terms: ['AI予想チーム最終結論', '最終結論', '統括担当', '統括予想', '最終予想'] },
+  { id: 'review', label: '反省会', terms: ['AI予想チーム反省会', '反省会担当', 'レース後反省会', '反省会'] },
 ];
 export const normalize = value => String(value || '').normalize('NFKC').toLowerCase().replace(/[\s・･、。:：/／\-‐–—_【】\[\]（）()「」『』]/g, '');
 export const jstDateKey = (now = new Date()) => new Date(new Date(now).getTime() + 9 * 3600000).toISOString().slice(0, 10);
@@ -43,10 +43,18 @@ function withinEdition(post, race) {
 }
 function automaticMatch(post, race, allRaces, role) {
   if (!withinEdition(post, race)) return false;
-  // 補足文・概要・本文で他担当に触れていても判定材料にはしない。
-  const heading = normalize(String(post.title || '').split(/[｜|]/)[0]);
-  const roleMatches = ROLES.filter(r => r.terms.some(term => heading.includes(normalize(term))));
+
+  const rawTitle = String(post.title || '');
+  const titleParts = rawTitle.split(/[｜|]/).map(normalize).filter(Boolean);
+
+  // レース名は従来どおりタイトル先頭部分で判定。
+  // 担当名は「レース名｜最終予想」のように2区切り目へ置く記事もあるため、
+  // 先頭2区切りまでを対象にする。
+  const heading = titleParts[0] || normalize(rawTitle);
+  const roleScope = titleParts.slice(0, 2).join('');
+  const roleMatches = ROLES.filter(r => r.terms.some(term => roleScope.includes(normalize(term))));
   if (roleMatches.length !== 1 || roleMatches[0].id !== role.id) return false;
+
   const matches = [];
   for (const r of allRaces) for (const name of [r.name, ...(r.aliases || [])]) {
     const needle = normalize(name);
